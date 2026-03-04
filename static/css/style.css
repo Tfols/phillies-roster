@@ -18,6 +18,10 @@
   --signed-bg: #fef9c3;
   --dont:    #9ca3af;
   --dont-bg: #f3f4f6;
+  --no-auto:    #7c3aed;
+  --no-auto-bg: #ede9fe;
+  --in-person:    #1d4ed8;
+  --in-person-bg: #dbeafe;
 }
 
 /* ── Reset ──────────────────────────────────────────────────────────────── */
@@ -158,8 +162,10 @@ button, select, input { font: inherit; }
 }
 .stats-bar span { opacity: .8; }
 .stats-bar strong { opacity: 1; font-weight: 700; }
-.stat-have   { color: #86efac; }
-.stat-signed { color: #fde68a; }
+.stat-have      { color: #86efac; }
+.stat-signed    { color: #fde68a; }
+.stat-no-auto   { color: #c4b5fd; }
+.stat-in-person { color: #93c5fd; }
 
 /* ── Filter bar ─────────────────────────────────────────────────────────── */
 .filter-bar {
@@ -317,9 +323,11 @@ th.sort-active .sort-icon { opacity: 1; }
 }
 .status-select:focus { box-shadow: 0 0 0 3px rgba(232,24,40,.25); }
 
-.status-have   { background-color: var(--have-bg);   color: var(--have);   border-color: #86efac; }
-.status-signed { background-color: var(--signed-bg); color: var(--signed); border-color: #fde68a; }
-.status-dont   { background-color: var(--dont-bg);   color: var(--dont);   border-color: #d1d5db; }
+.status-have      { background-color: var(--have-bg);      color: var(--have);      border-color: #86efac; }
+.status-signed    { background-color: var(--signed-bg);    color: var(--signed);    border-color: #fde68a; }
+.status-dont      { background-color: var(--dont-bg);      color: var(--dont);      border-color: #d1d5db; }
+.status-no-auto   { background-color: var(--no-auto-bg);   color: var(--no-auto);   border-color: #c4b5fd; }
+.status-in-person { background-color: var(--in-person-bg); color: var(--in-person); border-color: #93c5fd; }
 
 /* ── Loading / empty ─────────────────────────────────────────────────────── */
 .loading-row td, .empty-row td {

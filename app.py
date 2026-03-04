@@ -72,7 +72,7 @@ def update_status(player_id):
     player = Player.query.get_or_404(player_id)
     data = request.get_json(silent=True) or {}
     status = data.get('status', '')
-    if status not in ('Have', 'Have Signed', "Don't Have"):
+    if status not in ('Have', 'Have Signed', "Don't Have", 'No Auto Available', 'In Person'):
         return jsonify({'error': 'Invalid status'}), 400
     player.collection_status = status
     db.session.commit()
@@ -86,7 +86,10 @@ def get_stats():
     have = Player.query.filter_by(collection_status='Have').count()
     signed = Player.query.filter_by(collection_status='Have Signed').count()
     dont = Player.query.filter_by(collection_status="Don't Have").count()
-    return jsonify({'total': total, 'have': have, 'signed': signed, 'dont_have': dont})
+    no_auto = Player.query.filter_by(collection_status='No Auto Available').count()
+    in_person = Player.query.filter_by(collection_status='In Person').count()
+    return jsonify({'total': total, 'have': have, 'signed': signed, 'dont_have': dont,
+                    'no_auto': no_auto, 'in_person': in_person})
 
 
 # ── Bootstrap: create tables on first request, not at import time ─────────────

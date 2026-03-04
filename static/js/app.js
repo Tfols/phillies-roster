@@ -17,10 +17,12 @@ const rosterCount = document.getElementById('rosterCount');
 const toast       = document.getElementById('toast');
 
 // Stats bar
-const statTotal  = document.getElementById('statTotal');
-const statHave   = document.getElementById('statHave');
-const statSigned = document.getElementById('statSigned');
-const statDont   = document.getElementById('statDont');
+const statTotal    = document.getElementById('statTotal');
+const statHave     = document.getElementById('statHave');
+const statSigned   = document.getElementById('statSigned');
+const statDont     = document.getElementById('statDont');
+const statNoAuto   = document.getElementById('statNoAuto');
+const statInPerson = document.getElementById('statInPerson');
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -129,14 +131,16 @@ function avatarHTML(p) {
 
 // ── Status select HTML ─────────────────────────────────────────────────────
 const STATUS_CLASS = {
-  'Have':        'status-have',
-  'Have Signed': 'status-signed',
-  "Don't Have":  'status-dont',
+  'Have':             'status-have',
+  'Have Signed':      'status-signed',
+  "Don't Have":       'status-dont',
+  'No Auto Available':'status-no-auto',
+  'In Person':        'status-in-person',
 };
 
 function statusSelectHTML(p) {
   const cls = STATUS_CLASS[p.collection_status] || 'status-dont';
-  const opts = ["Don't Have", 'Have', 'Have Signed']
+  const opts = ["Don't Have", 'Have', 'Have Signed', 'No Auto Available', 'In Person']
     .map(s => `<option value="${s}"${s === p.collection_status ? ' selected' : ''}>${s}</option>`)
     .join('');
   return `<select class="status-select ${cls}" data-id="${p.id}">${opts}</select>`;
@@ -177,13 +181,17 @@ async function onStatusChange(e) {
 
 // ── Global stats bar ───────────────────────────────────────────────────────
 function updateGlobalStats() {
-  const have   = allPlayers.filter(p => p.collection_status === 'Have').length;
-  const signed = allPlayers.filter(p => p.collection_status === 'Have Signed').length;
-  const dont   = allPlayers.filter(p => p.collection_status === "Don't Have").length;
-  statTotal.textContent  = allPlayers.length.toLocaleString();
-  statHave.textContent   = have.toLocaleString();
-  statSigned.textContent = signed.toLocaleString();
-  statDont.textContent   = dont.toLocaleString();
+  const have     = allPlayers.filter(p => p.collection_status === 'Have').length;
+  const signed   = allPlayers.filter(p => p.collection_status === 'Have Signed').length;
+  const dont     = allPlayers.filter(p => p.collection_status === "Don't Have").length;
+  const noAuto   = allPlayers.filter(p => p.collection_status === 'No Auto Available').length;
+  const inPerson = allPlayers.filter(p => p.collection_status === 'In Person').length;
+  statTotal.textContent    = allPlayers.length.toLocaleString();
+  statHave.textContent     = have.toLocaleString();
+  statSigned.textContent   = signed.toLocaleString();
+  statDont.textContent     = dont.toLocaleString();
+  statNoAuto.textContent   = noAuto.toLocaleString();
+  statInPerson.textContent = inPerson.toLocaleString();
 }
 
 // ── Filters & sort event wiring ────────────────────────────────────────────
