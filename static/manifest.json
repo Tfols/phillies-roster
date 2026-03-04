@@ -1,0 +1,25 @@
+{
+  "name": "Phillies All-Time Roster",
+  "short_name": "Phillies",
+  "description": "Philadelphia Phillies All-Time Player Roster Tracker",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#E81828",
+  "theme_color": "#E81828",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Phillies Roster{% endblock %}</title>
+
+  <!-- PWA / browser chrome -->
+  <meta name="theme-color" content="#E81828">
+  <meta name="description" content="Philadelphia Phillies All-Time Player Roster Tracker">
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Phillies">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/static/manifest.json">
+
+  <!-- Favicon fallback -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% block body %}{% endblock %}
+</body>
+</html>

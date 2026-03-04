@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Phillies All-Time Roster{% endblock %}
+
+{% block body %}
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-logo">⚾</div>
+  <div class="header-text">
+    <h1>Phillies All-Time Roster</h1>
+    <p>Philadelphia Phillies · 1883 – Present</p>
+  </div>
+  <a href="/logout" class="btn-logout">Logout</a>
+</header>
+
+<!-- ── Stats bar ──────────────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <span>Total: <strong id="statTotal">…</strong></span>
+  <span class="stat-have">Have: <strong id="statHave">…</strong></span>
+  <span class="stat-signed">Signed: <strong id="statSigned">…</strong></span>
+  <span>Don't Have: <strong id="statDont">…</strong></span>
+</div>
+
+<!-- ── Filter bar ─────────────────────────────────────────────────────── -->
+<div class="filter-bar">
+  <input
+    type="search"
+    id="searchInput"
+    placeholder="Search name…"
+    autocomplete="off"
+    autocorrect="off"
+    spellcheck="false"
+  >
+  <select id="posFilter">
+    <option value="">All Positions</option>
+  </select>
+  <input
+    type="number"
+    id="yearInput"
+    placeholder="Year…"
+    min="1883"
+    max="2025"
+  >
+  <select id="statusFilter">
+    <option value="">All Statuses</option>
+    <option value="Have">Have</option>
+    <option value="Have Signed">Have Signed</option>
+    <option value="Don't Have">Don't Have</option>
+  </select>
+  <button id="clearBtn" class="btn-clear">Clear</button>
+</div>
+
+<!-- ── Count ──────────────────────────────────────────────────────────── -->
+<div class="roster-count" id="rosterCount"></div>
+
+<!-- ── Table ──────────────────────────────────────────────────────────── -->
+<div class="table-wrapper">
+  <table class="roster-table">
+    <thead>
+      <tr>
+        <th class="col-photo"></th>
+        <th class="sortable sort-active" data-col="full_name">
+          Name <span class="sort-icon asc"></span>
+        </th>
+        <th class="sortable" data-col="position">
+          Position <span class="sort-icon"></span>
+        </th>
+        <th class="sortable" data-col="year_start">
+          Years <span class="sort-icon"></span>
+        </th>
+        <th class="sortable" data-col="collection_status">
+          Collection <span class="sort-icon"></span>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="playerBody">
+      <tr class="loading-row">
+        <td colspan="5"><span class="spinner"></span>Loading roster…</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Toast ──────────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/app.js"></script>
+{% endblock %}
