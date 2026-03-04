@@ -43,14 +43,18 @@
     min="1883"
     max="2025"
   >
-  <select id="statusFilter">
-    <option value="">All Statuses</option>
-    <option value="Have">Have</option>
-    <option value="Have Signed">Have Signed</option>
-    <option value="Don't Have">Don't Have</option>
-    <option value="No Auto Available">No Auto Available</option>
-    <option value="In Person">In Person</option>
-  </select>
+  <div class="status-dropdown" id="statusDropdown">
+    <button type="button" class="status-dropdown-btn" id="statusDropdownBtn">
+      All Statuses <span class="dd-arrow">▾</span>
+    </button>
+    <div class="status-dropdown-menu" id="statusDropdownMenu">
+      <label><input type="checkbox" value="Have"> Have</label>
+      <label><input type="checkbox" value="Have Signed"> Have Signed</label>
+      <label><input type="checkbox" value="Don't Have"> Don't Have</label>
+      <label><input type="checkbox" value="No Auto Available"> No Auto Available</label>
+      <label><input type="checkbox" value="In Person"> In Person</label>
+    </div>
+  </div>
   <button id="clearBtn" class="btn-clear">Clear</button>
 </div>
 

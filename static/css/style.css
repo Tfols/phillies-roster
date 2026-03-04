@@ -121,7 +121,7 @@ button, select, input { font: inherit; }
 .app-header {
   background: linear-gradient(135deg, var(--red) 0%, var(--red-dk) 100%);
   color: var(--white);
-  padding: 1rem 1.25rem;
+  padding: calc(1rem + env(safe-area-inset-top)) 1.25rem 1rem;
   display: flex;
   align-items: center;
   gap: .75rem;
@@ -192,7 +192,52 @@ button, select, input { font: inherit; }
 #searchInput  { flex: 1 1 160px; min-width: 140px; }
 #posFilter    { flex: 0 1 110px; }
 #yearInput    { flex: 0 1 90px; }
-#statusFilter { flex: 0 1 140px; }
+/* ── Status multi-select dropdown ──────────────────────────────────────────── */
+.status-dropdown { position: relative; flex: 0 1 150px; }
+.status-dropdown-btn {
+  width: 100%;
+  padding: .5rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: .88rem;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .25rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.status-dropdown-btn.active { border-color: var(--red); color: var(--red); }
+.dd-arrow { font-size: .7rem; flex-shrink: 0; }
+.status-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 185px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 200;
+  padding: .3rem 0;
+}
+.status-dropdown-menu.open { display: block; }
+.status-dropdown-menu label {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .48rem .85rem;
+  font-size: .85rem;
+  cursor: pointer;
+  user-select: none;
+}
+.status-dropdown-menu label:hover { background: var(--bg); }
+.status-dropdown-menu input[type="checkbox"] { accent-color: var(--red); width: 15px; height: 15px; cursor: pointer; }
 .btn-clear {
   padding: .5rem .9rem;
   border: 1.5px solid var(--border);

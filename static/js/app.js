@@ -11,7 +11,8 @@ const tbody       = document.getElementById('playerBody');
 const searchInput = document.getElementById('searchInput');
 const posFilter   = document.getElementById('posFilter');
 const yearInput   = document.getElementById('yearInput');
-const statusFilt  = document.getElementById('statusFilter');
+const statusDropdownBtn  = document.getElementById('statusDropdownBtn');
+const statusDropdownMenu = document.getElementById('statusDropdownMenu');
 const clearBtn    = document.getElementById('clearBtn');
 const rosterCount = document.getElementById('rosterCount');
 const toast       = document.getElementById('toast');
@@ -61,16 +62,18 @@ function populatePositionFilter() {
 
 // ── Filter + sort ──────────────────────────────────────────────────────────
 function getFiltered() {
-  const search = searchInput.value.trim().toLowerCase();
-  const pos    = posFilter.value;
-  const year   = parseInt(yearInput.value, 10) || null;
-  const status = statusFilt.value;
+  const search   = searchInput.value.trim().toLowerCase();
+  const pos      = posFilter.value;
+  const year     = parseInt(yearInput.value, 10) || null;
+  const statuses = new Set(
+    [...statusDropdownMenu.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value)
+  );
 
   let list = allPlayers.filter(p => {
     if (search && !p.full_name.toLowerCase().includes(search)) return false;
     if (pos    && p.position !== pos) return false;
     if (year   && !(p.year_start <= year && p.year_end >= year)) return false;
-    if (status && p.collection_status !== status) return false;
+    if (statuses.size > 0 && !statuses.has(p.collection_status)) return false;
     return true;
   });
 
@@ -194,9 +197,53 @@ function updateGlobalStats() {
   statInPerson.textContent = inPerson.toLocaleString();
 }
 
+// ── Status dropdown helpers ─────────────────────────────────────────────────
+function updateDropdownLabel() {
+  const checked = [...statusDropdownMenu.querySelectorAll('input[type="checkbox"]:checked')];
+  const btn = statusDropdownBtn;
+  if (checked.length === 0) {
+    btn.querySelector('.dd-label').textContent = 'All Statuses';
+    btn.classList.remove('active');
+  } else if (checked.length === 1) {
+    btn.querySelector('.dd-label').textContent = checked[0].value;
+    btn.classList.add('active');
+  } else {
+    btn.querySelector('.dd-label').textContent = `Status (${checked.length})`;
+    btn.classList.add('active');
+  }
+}
+
+function clearStatusDropdown() {
+  statusDropdownMenu.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+  updateDropdownLabel();
+}
+
 // ── Filters & sort event wiring ────────────────────────────────────────────
 function setupFilters() {
   let debounceTimer;
+
+  // Wrap the button text in a span so we can update it independently
+  statusDropdownBtn.innerHTML = '<span class="dd-label">All Statuses</span> <span class="dd-arrow">▾</span>';
+
+  // Toggle dropdown open/closed
+  statusDropdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    statusDropdownMenu.classList.toggle('open');
+  });
+
+  // Checkbox changes — re-render immediately
+  statusDropdownMenu.addEventListener('change', () => {
+    updateDropdownLabel();
+    render();
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!statusDropdownBtn.contains(e.target) && !statusDropdownMenu.contains(e.target)) {
+      statusDropdownMenu.classList.remove('open');
+    }
+  });
+
   searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(render, 200);
@@ -206,12 +253,11 @@ function setupFilters() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(render, 300);
   });
-  statusFilt.addEventListener('change', render);
   clearBtn.addEventListener('click', () => {
     searchInput.value = '';
     posFilter.value   = '';
     yearInput.value   = '';
-    statusFilt.value  = '';
+    clearStatusDropdown();
     render();
   });
 }
