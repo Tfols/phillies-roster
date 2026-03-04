@@ -89,9 +89,16 @@ def get_stats():
     return jsonify({'total': total, 'have': have, 'signed': signed, 'dont_have': dont})
 
 
-# ── Bootstrap ─────────────────────────────────────────────────────────────────
-with app.app_context():
-    db.create_all()
+# ── Bootstrap: create tables on first request, not at import time ─────────────
+_db_ready = False
+
+@app.before_request
+def _init_db():
+    global _db_ready
+    if not _db_ready:
+        db.create_all()
+        _db_ready = True
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
