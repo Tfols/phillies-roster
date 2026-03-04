@@ -160,7 +160,9 @@ button, select, input { font: inherit; }
   flex-wrap: wrap;
   font-size: .82rem;
 }
-.stats-bar span { opacity: .8; }
+.stats-bar span { opacity: .8; cursor: pointer; border-radius: 4px; padding: .15rem .35rem; transition: opacity .15s, background .15s; }
+.stats-bar span:hover { opacity: 1; background: rgba(255,255,255,.15); }
+.stats-bar span.stat-active { opacity: 1; background: rgba(255,255,255,.22); outline: 1.5px solid rgba(255,255,255,.5); }
 .stats-bar strong { opacity: 1; font-weight: 700; }
 .stat-have      { color: #86efac; }
 .stat-signed    { color: #fde68a; }

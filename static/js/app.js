@@ -218,6 +218,21 @@ function clearStatusDropdown() {
   updateDropdownLabel();
 }
 
+// ── Stats bar click → quick filter ─────────────────────────────────────────
+function applyStatFilter(status) {
+  clearStatusDropdown();
+  if (status) {
+    const cb = [...statusDropdownMenu.querySelectorAll('input[type="checkbox"]')]
+      .find(c => c.value === status);
+    if (cb) { cb.checked = true; updateDropdownLabel(); }
+  }
+  // Highlight active stat pill
+  document.querySelectorAll('.stats-bar span[data-filter]').forEach(s => {
+    s.classList.toggle('stat-active', s.dataset.filter === status);
+  });
+  render();
+}
+
 // ── Filters & sort event wiring ────────────────────────────────────────────
 function setupFilters() {
   let debounceTimer;
@@ -231,9 +246,10 @@ function setupFilters() {
     statusDropdownMenu.classList.toggle('open');
   });
 
-  // Checkbox changes — re-render immediately
+  // Checkbox changes — re-render immediately, clear stat-bar highlight
   statusDropdownMenu.addEventListener('change', () => {
     updateDropdownLabel();
+    document.querySelectorAll('.stats-bar span[data-filter]').forEach(s => s.classList.remove('stat-active'));
     render();
   });
 
@@ -253,11 +269,18 @@ function setupFilters() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(render, 300);
   });
+  // Stats bar click → quick filter
+  document.querySelector('.stats-bar').addEventListener('click', (e) => {
+    const span = e.target.closest('[data-filter]');
+    if (span) applyStatFilter(span.dataset.filter);
+  });
+
   clearBtn.addEventListener('click', () => {
     searchInput.value = '';
     posFilter.value   = '';
     yearInput.value   = '';
     clearStatusDropdown();
+    document.querySelectorAll('.stats-bar span[data-filter]').forEach(s => s.classList.remove('stat-active'));
     render();
   });
 }
