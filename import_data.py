@@ -40,7 +40,7 @@ db.init_app(app)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 DATABANK_URL = (
-    'https://github.com/chadwickbureau/baseballdatabank/archive/refs/heads/master.zip'
+    'https://github.com/chadwickbureau/baseballdatabank/archive/refs/heads/main.zip'
 )
 REGISTER_URL = (
     'https://raw.githubusercontent.com/chadwickbureau/register/master/data/people.csv'
