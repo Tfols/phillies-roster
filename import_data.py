@@ -18,7 +18,6 @@ Set DATABASE_URL in your environment or .env file before running locally.
 import csv
 import io
 import os
-import zipfile
 from collections import defaultdict
 
 import requests
@@ -39,9 +38,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-DATABANK_URL = (
-    'https://github.com/chadwickbureau/baseballdatabank/archive/refs/heads/main.zip'
-)
 REGISTER_URL = (
     'https://raw.githubusercontent.com/chadwickbureau/register/master/data/people.csv'
 )
@@ -84,39 +80,51 @@ def primary_position(pos_games: dict) -> str:
 
 
 # ── Step 1: Lahman / Chadwick Databank ────────────────────────────────────────
+# Try multiple branch/path combos — repo layout has shifted over time
+_RAW = 'https://raw.githubusercontent.com/chadwickbureau/baseballdatabank/{branch}/{subdir}{file}'
+_CANDIDATES = [
+    ('master', 'core/'), ('main', 'core/'),
+    ('master', ''),      ('main', ''),
+]
+
+def _fetch_csv(filename: str) -> str:
+    for branch, subdir in _CANDIDATES:
+        url = _RAW.format(branch=branch, subdir=subdir, file=filename)
+        try:
+            r = requests.get(url, timeout=60)
+            if r.status_code == 200:
+                print(f'    Fetched {filename} from {url}')
+                return r.text
+        except Exception:
+            pass
+    raise RuntimeError(f'Could not download {filename} from any known Chadwick URL')
+
+
 def load_databank():
-    print('  Downloading Chadwick Baseball Databank (this may take a minute)…')
-    r = requests.get(DATABANK_URL, timeout=120)
-    r.raise_for_status()
-    z = zipfile.ZipFile(io.BytesIO(r.content))
+    print('  Downloading People.csv and Appearances.csv from Chadwick Bureau…')
 
     people: dict[str, dict] = {}
     phi: dict[str, dict] = defaultdict(
         lambda: {'years': [], 'pos': defaultdict(int)}
     )
 
-    for name in z.namelist():
-        if name.endswith('/People.csv'):
-            with z.open(name) as f:
-                for row in csv.DictReader(io.TextIOWrapper(f, 'utf-8')):
-                    people[row['playerID']] = row
-            print(f'    Loaded {len(people):,} people')
+    for row in csv.DictReader(io.StringIO(_fetch_csv('People.csv'))):
+        people[row['playerID']] = row
+    print(f'    Loaded {len(people):,} people')
 
-        if name.endswith('/Appearances.csv'):
-            count = 0
-            with z.open(name) as f:
-                for row in csv.DictReader(io.TextIOWrapper(f, 'utf-8')):
-                    if row['teamID'] == 'PHI':
-                        pid = row['playerID']
-                        phi[pid]['years'].append(int(row['yearID']))
-                        for col in POSITION_MAP:
-                            try:
-                                phi[pid]['pos'][col] += int(row.get(col) or 0)
-                            except ValueError:
-                                pass
-                        count += 1
-            print(f'    Found {len(phi):,} unique Phillies players '
-                  f'({count:,} appearance-rows)')
+    count = 0
+    for row in csv.DictReader(io.StringIO(_fetch_csv('Appearances.csv'))):
+        if row['teamID'] == 'PHI':
+            pid = row['playerID']
+            phi[pid]['years'].append(int(row['yearID']))
+            for col in POSITION_MAP:
+                try:
+                    phi[pid]['pos'][col] += int(row.get(col) or 0)
+                except ValueError:
+                    pass
+            count += 1
+    print(f'    Found {len(phi):,} unique Phillies players '
+          f'({count:,} appearance-rows)')
 
     return people, phi
 
