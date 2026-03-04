@@ -41,11 +41,6 @@ def make_icon(size: int) -> Image.Image:
     draw.rounded_rectangle([0, 0, size - 1, size - 1],
                            radius=radius, fill=PHILLIES_RED)
 
-    # Thin white border
-    bw = max(2, size // 48)
-    draw.rounded_rectangle([bw, bw, size - bw - 1, size - bw - 1],
-                           radius=radius - bw, outline=WHITE, width=bw)
-
     # "P" glyph centred
     font_size = int(size * 0.62)
     font = load_font(font_size)

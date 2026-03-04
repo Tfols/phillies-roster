@@ -257,18 +257,28 @@ th.sort-active .sort-icon { opacity: 1; }
   border-radius: 50%;
   overflow: hidden;
   background: var(--red);
+  position: relative;
+  flex-shrink: 0;
+}
+/* Image absolutely fills the circle, covering initials beneath */
+.avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+/* Initials sit beneath as fallback — visible only when image hides itself */
+.avatar-initials {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-.avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
-.avatar-initials {
   color: var(--white);
   font-size: .72rem;
   font-weight: 700;
   line-height: 1;
-  text-align: center;
 }
 
 /* ── Player name ─────────────────────────────────────────────────────────── */
@@ -359,6 +369,15 @@ th.sort-active .sort-icon { opacity: 1; }
   .filter-bar { padding: .6rem .75rem; gap: .5rem; }
   #searchInput { flex: 1 1 100%; }
   .stats-bar { gap: 1rem; font-size: .78rem; }
-  .roster-table th, .roster-table td { padding: .55rem .65rem; }
-  .roster-table { min-width: 420px; }
+
+  /* Hide photo column — saves ~50px, lets table fit 375px screens */
+  .col-photo { display: none; }
+
+  /* Table fits iPhone without horizontal scroll */
+  .roster-table { min-width: 0; width: 100%; font-size: .8rem; }
+  .roster-table th { padding: .5rem .5rem; font-size: .72rem; }
+  .roster-table td { padding: .5rem .5rem; }
+
+  /* Compact status dropdown on mobile */
+  .status-select { font-size: .75rem; padding: .25rem .35rem; padding-right: 1.3rem; }
 }

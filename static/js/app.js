@@ -117,20 +117,14 @@ function render() {
 // ── Avatar ─────────────────────────────────────────────────────────────────
 function avatarHTML(p) {
   const initials = p.full_name
-    .split(' ')
-    .filter(Boolean)
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('');
+    .split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('');
 
-  if (p.photo_url) {
-    return `
-      <div class="avatar-wrap">
-        <img src="${esc(p.photo_url)}" alt="${esc(p.full_name)}" loading="lazy"
-             onerror="this.parentNode.innerHTML='<div class=\\"avatar-initials\\">${esc(initials)}</div>'">
-      </div>`;
-  }
-  return `<div class="avatar-wrap"><div class="avatar-initials">${esc(initials)}</div></div>`;
+  // Initials div always present as background; image absolutely overlays it.
+  // On error the image hides itself, revealing initials cleanly.
+  const img = p.photo_url
+    ? `<img class="avatar-img" src="${esc(p.photo_url)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    : '';
+  return `<div class="avatar-wrap">${img}<div class="avatar-initials">${esc(initials)}</div></div>`;
 }
 
 // ── Status select HTML ─────────────────────────────────────────────────────
