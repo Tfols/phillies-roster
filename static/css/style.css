@@ -211,7 +211,7 @@ button, select, input { font: inherit; }
   white-space: nowrap;
   overflow: hidden;
 }
-.status-dropdown-btn.active { border-color: var(--red); color: var(--red); }
+.status-dropdown-btn.active { border-color: var(--red); color: #000; }
 .dd-arrow { font-size: .7rem; flex-shrink: 0; }
 .status-dropdown-menu {
   display: none;
@@ -368,11 +368,11 @@ th.sort-active .sort-icon { opacity: 1; }
 }
 .status-select:focus { box-shadow: 0 0 0 3px rgba(232,24,40,.25); }
 
-.status-have      { background-color: var(--have-bg);      color: var(--have);      border-color: #86efac; }
-.status-signed    { background-color: var(--signed-bg);    color: var(--signed);    border-color: #fde68a; }
-.status-dont      { background-color: var(--dont-bg);      color: var(--dont);      border-color: #d1d5db; }
-.status-no-auto   { background-color: var(--no-auto-bg);   color: var(--no-auto);   border-color: #c4b5fd; }
-.status-in-person { background-color: var(--in-person-bg); color: var(--in-person); border-color: #93c5fd; }
+.status-have      { background-color: var(--have-bg);      color: #000; border-color: #86efac; }
+.status-signed    { background-color: var(--signed-bg);    color: #000; border-color: #fde68a; }
+.status-dont      { background-color: var(--dont-bg);      color: #000; border-color: #d1d5db; }
+.status-no-auto   { background-color: var(--no-auto-bg);   color: #000; border-color: #c4b5fd; }
+.status-in-person { background-color: var(--in-person-bg); color: #000; border-color: #93c5fd; }
 
 /* ── Loading / empty ─────────────────────────────────────────────────────── */
 .loading-row td, .empty-row td {
