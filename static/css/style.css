@@ -219,7 +219,7 @@ button, select, input { font: inherit; }
   top: calc(100% + 4px);
   left: 0;
   min-width: 185px;
-  background: var(--card);
+  background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
