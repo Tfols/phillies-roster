@@ -13,81 +13,148 @@
   <a href="/logout" class="btn-logout">Logout</a>
 </header>
 
-<!-- ── Stats bar ──────────────────────────────────────────────────────── -->
-<div class="stats-bar">
-  <span data-filter="">Total: <strong id="statTotal">…</strong></span>
-  <span data-filter="Have" class="stat-have">Have: <strong id="statHave">…</strong></span>
-  <span data-filter="Have Signed" class="stat-signed">Signed: <strong id="statSigned">…</strong></span>
-  <span data-filter="Don't Have">Don't Have: <strong id="statDont">…</strong></span>
-  <span data-filter="No Auto Available" class="stat-no-auto">No Auto: <strong id="statNoAuto">…</strong></span>
-  <span data-filter="In Person" class="stat-in-person">In Person: <strong id="statInPerson">…</strong></span>
-</div>
+<!-- ── Tab navigation ─────────────────────────────────────────────────── -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="mlb">⚾ MLB Roster</button>
+  <button class="tab-btn" data-tab="minors">🌱 Minor League</button>
+</nav>
 
-<!-- ── Filter bar ─────────────────────────────────────────────────────── -->
-<div class="filter-bar">
-  <input
-    type="search"
-    id="searchInput"
-    placeholder="Search name…"
-    autocomplete="off"
-    autocorrect="off"
-    spellcheck="false"
-  >
-  <select id="posFilter">
-    <option value="">All Positions</option>
-  </select>
-  <input
-    type="number"
-    id="yearInput"
-    placeholder="Year…"
-    min="1883"
-    max="2025"
-  >
-  <div class="status-dropdown" id="statusDropdown">
-    <button type="button" class="status-dropdown-btn" id="statusDropdownBtn">
-      All Statuses <span class="dd-arrow">▾</span>
-    </button>
-    <div class="status-dropdown-menu" id="statusDropdownMenu">
-      <label><input type="checkbox" value="Have"> Have</label>
-      <label><input type="checkbox" value="Have Signed"> Have Signed</label>
-      <label><input type="checkbox" value="Don't Have"> Don't Have</label>
-      <label><input type="checkbox" value="No Auto Available"> No Auto Available</label>
-      <label><input type="checkbox" value="In Person"> In Person</label>
-    </div>
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  MLB PANEL                                                            -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div id="panel-mlb" class="tab-panel">
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <span data-filter="">Total: <strong id="statTotal">…</strong></span>
+    <span data-filter="Have" class="stat-have">Have: <strong id="statHave">…</strong></span>
+    <span data-filter="Have Signed" class="stat-signed">Signed: <strong id="statSigned">…</strong></span>
+    <span data-filter="Don't Have">Don't Have: <strong id="statDont">…</strong></span>
+    <span data-filter="No Auto Available" class="stat-no-auto">No Auto: <strong id="statNoAuto">…</strong></span>
+    <span data-filter="In Person" class="stat-in-person">In Person: <strong id="statInPerson">…</strong></span>
   </div>
-  <button id="clearBtn" class="btn-clear">Clear</button>
-</div>
 
-<!-- ── Count ──────────────────────────────────────────────────────────── -->
-<div class="roster-count" id="rosterCount"></div>
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <input type="search" id="searchInput" placeholder="Search name…"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <select id="posFilter">
+      <option value="">All Positions</option>
+    </select>
+    <input type="number" id="yearInput" placeholder="Year…" min="1883" max="2025">
+    <div class="status-dropdown" id="statusDropdown">
+      <button type="button" class="status-dropdown-btn" id="statusDropdownBtn">
+        All Statuses <span class="dd-arrow">▾</span>
+      </button>
+      <div class="status-dropdown-menu" id="statusDropdownMenu">
+        <label><input type="checkbox" value="Have"> Have</label>
+        <label><input type="checkbox" value="Have Signed"> Have Signed</label>
+        <label><input type="checkbox" value="Don't Have"> Don't Have</label>
+        <label><input type="checkbox" value="No Auto Available"> No Auto Available</label>
+        <label><input type="checkbox" value="In Person"> In Person</label>
+      </div>
+    </div>
+    <button id="clearBtn" class="btn-clear">Clear</button>
+  </div>
 
-<!-- ── Table ──────────────────────────────────────────────────────────── -->
-<div class="table-wrapper">
-  <table class="roster-table">
-    <thead>
-      <tr>
-        <th class="col-photo"></th>
-        <th class="sortable sort-active" data-col="full_name">
-          Name <span class="sort-icon asc"></span>
-        </th>
-        <th class="sortable" data-col="position">
-          Position <span class="sort-icon"></span>
-        </th>
-        <th class="sortable" data-col="year_start">
-          Years <span class="sort-icon"></span>
-        </th>
-        <th class="sortable" data-col="collection_status">
-          Collection <span class="sort-icon"></span>
-        </th>
-      </tr>
-    </thead>
-    <tbody id="playerBody">
-      <tr class="loading-row">
-        <td colspan="5"><span class="spinner"></span>Loading roster…</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+  <div class="roster-count" id="rosterCount"></div>
+
+  <div class="table-wrapper">
+    <table class="roster-table">
+      <thead>
+        <tr>
+          <th class="col-photo"></th>
+          <th class="sortable sort-active" data-col="full_name">Name <span class="sort-icon asc"></span></th>
+          <th class="sortable" data-col="position">Position <span class="sort-icon"></span></th>
+          <th class="sortable" data-col="year_start">Years <span class="sort-icon"></span></th>
+          <th class="sortable" data-col="collection_status">Collection <span class="sort-icon"></span></th>
+        </tr>
+      </thead>
+      <tbody id="playerBody">
+        <tr class="loading-row">
+          <td colspan="5"><span class="spinner"></span>Loading roster…</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- #panel-mlb -->
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  MINOR LEAGUE PANEL                                                   -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div id="panel-minors" class="tab-panel" hidden>
+
+  <!-- Minor league stats bar -->
+  <div class="stats-bar" id="minorStatsBar">
+    <span data-minor-filter="">Total: <strong id="minorStatTotal">…</strong></span>
+    <span data-minor-filter="Have" class="stat-have">Have: <strong id="minorStatHave">…</strong></span>
+    <span data-minor-filter="Have Signed" class="stat-signed">Signed: <strong id="minorStatSigned">…</strong></span>
+    <span data-minor-filter="Don't Have">Don't Have: <strong id="minorStatDont">…</strong></span>
+    <span data-minor-filter="No Auto Available" class="stat-no-auto">No Auto: <strong id="minorStatNoAuto">…</strong></span>
+    <span data-minor-filter="In Person" class="stat-in-person">In Person: <strong id="minorStatInPerson">…</strong></span>
+  </div>
+
+  <!-- Minor league filter bar -->
+  <div class="filter-bar">
+    <input type="search" id="minorSearchInput" placeholder="Search name…"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <select id="minorPosFilter">
+      <option value="">All Positions</option>
+    </select>
+    <select id="minorLevelFilter">
+      <option value="">All Levels</option>
+      <option value="Triple-A">Triple-A</option>
+      <option value="Double-A">Double-A</option>
+      <option value="High-A">High-A</option>
+      <option value="Single-A">Single-A</option>
+      <option value="Short-Season A">Short-Season A</option>
+      <option value="Rookie">Rookie</option>
+      <option value="Rookie (Intl)">Rookie (Intl)</option>
+    </select>
+    <select id="minorAffiliateFilter">
+      <option value="">All Affiliates</option>
+    </select>
+    <input type="number" id="minorYearInput" placeholder="Year…" min="2005" max="2025">
+    <div class="status-dropdown" id="minorStatusDropdown">
+      <button type="button" class="status-dropdown-btn" id="minorStatusDropdownBtn">
+        All Statuses <span class="dd-arrow">▾</span>
+      </button>
+      <div class="status-dropdown-menu" id="minorStatusDropdownMenu">
+        <label><input type="checkbox" value="Have"> Have</label>
+        <label><input type="checkbox" value="Have Signed"> Have Signed</label>
+        <label><input type="checkbox" value="Don't Have"> Don't Have</label>
+        <label><input type="checkbox" value="No Auto Available"> No Auto Available</label>
+        <label><input type="checkbox" value="In Person"> In Person</label>
+      </div>
+    </div>
+    <button id="minorClearBtn" class="btn-clear">Clear</button>
+  </div>
+
+  <div class="roster-count" id="minorRosterCount"></div>
+
+  <div class="table-wrapper">
+    <table class="roster-table">
+      <thead>
+        <tr>
+          <th class="col-photo"></th>
+          <th class="minor-sortable sort-active" data-col="full_name">Name <span class="sort-icon asc"></span></th>
+          <th class="minor-sortable" data-col="position">Pos <span class="sort-icon"></span></th>
+          <th class="minor-sortable col-level" data-col="level">Level <span class="sort-icon"></span></th>
+          <th class="minor-sortable col-affiliate" data-col="affiliate_name">Affiliate <span class="sort-icon"></span></th>
+          <th class="minor-sortable" data-col="year_start">Years <span class="sort-icon"></span></th>
+          <th class="minor-sortable" data-col="collection_status">Collection <span class="sort-icon"></span></th>
+        </tr>
+      </thead>
+      <tbody id="minorBody">
+        <tr class="loading-row">
+          <td colspan="7">Select the Minor League tab to load data.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- #panel-minors -->
 
 <!-- ── Toast ──────────────────────────────────────────────────────────── -->
 <div class="toast" id="toast"></div>

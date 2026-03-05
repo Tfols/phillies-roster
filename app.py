@@ -4,16 +4,16 @@ from functools import wraps
 
 from flask import (Flask, jsonify, redirect, render_template,
                    request, session, url_for)
-from models import Player, db
+from models import Player, Affiliate, MinorPlayer, db, VALID_STATUSES
 
 app = Flask(__name__)
 
-# ── Configuration ────────────────────────────────────────────────────────────
+# ── Configuration ─────────────────────────────────────────────────────────────
 _db_url = os.environ.get('DATABASE_URL', 'postgresql://localhost/phillies')
 if _db_url.startswith('postgres://'):
     _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
+app.config['SQLALCHEMY_DATABASE_URI']  = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
 app.permanent_session_lifetime = timedelta(days=30)
@@ -23,7 +23,7 @@ APP_PASSWORD = os.environ.get('APP_PASSWORD', '')
 db.init_app(app)
 
 
-# ── Auth ─────────────────────────────────────────────────────────────────────
+# ── Auth ──────────────────────────────────────────────────────────────────────
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -51,14 +51,14 @@ def logout():
     return redirect(url_for('login'))
 
 
-# ── Pages ─────────────────────────────────────────────────────────────────────
+# ── Pages ──────────────────────────────────────────────────────────────────────
 @app.route('/')
 @login_required
 def index():
     return render_template('roster.html')
 
 
-# ── API ───────────────────────────────────────────────────────────────────────
+# ── MLB API ───────────────────────────────────────────────────────────────────
 @app.route('/api/players')
 @login_required
 def get_players():
@@ -70,9 +70,9 @@ def get_players():
 @login_required
 def update_status(player_id):
     player = Player.query.get_or_404(player_id)
-    data = request.get_json(silent=True) or {}
+    data   = request.get_json(silent=True) or {}
     status = data.get('status', '')
-    if status not in ('Have', 'Have Signed', "Don't Have", 'No Auto Available', 'In Person'):
+    if status not in VALID_STATUSES:
         return jsonify({'error': 'Invalid status'}), 400
     player.collection_status = status
     db.session.commit()
@@ -82,24 +82,90 @@ def update_status(player_id):
 @app.route('/api/stats')
 @login_required
 def get_stats():
-    total = Player.query.count()
-    have = Player.query.filter_by(collection_status='Have').count()
-    signed = Player.query.filter_by(collection_status='Have Signed').count()
-    dont = Player.query.filter_by(collection_status="Don't Have").count()
-    no_auto = Player.query.filter_by(collection_status='No Auto Available').count()
+    total     = Player.query.count()
+    have      = Player.query.filter_by(collection_status='Have').count()
+    signed    = Player.query.filter_by(collection_status='Have Signed').count()
+    dont      = Player.query.filter_by(collection_status="Don't Have").count()
+    no_auto   = Player.query.filter_by(collection_status='No Auto Available').count()
     in_person = Player.query.filter_by(collection_status='In Person').count()
-    return jsonify({'total': total, 'have': have, 'signed': signed, 'dont_have': dont,
-                    'no_auto': no_auto, 'in_person': in_person})
+    return jsonify({'total': total, 'have': have, 'signed': signed,
+                    'dont_have': dont, 'no_auto': no_auto, 'in_person': in_person})
 
 
-# ── Bootstrap: create tables on first request, not at import time ─────────────
+# ── Minor League API ──────────────────────────────────────────────────────────
+@app.route('/api/minors')
+@login_required
+def get_minors():
+    players = (MinorPlayer.query
+               .filter_by(is_mlb_duplicate=False)
+               .order_by(MinorPlayer.full_name)
+               .all())
+    return jsonify([p.to_dict() for p in players])
+
+
+@app.route('/api/minors/<int:player_id>/status', methods=['PATCH'])
+@login_required
+def update_minor_status(player_id):
+    player = MinorPlayer.query.get_or_404(player_id)
+    data   = request.get_json(silent=True) or {}
+    status = data.get('status', '')
+    if status not in VALID_STATUSES:
+        return jsonify({'error': 'Invalid status'}), 400
+    player.collection_status = status
+    db.session.commit()
+    return jsonify(player.to_dict())
+
+
+@app.route('/api/minors/stats')
+@login_required
+def get_minor_stats():
+    base      = MinorPlayer.query.filter_by(is_mlb_duplicate=False)
+    total     = base.count()
+    have      = base.filter_by(collection_status='Have').count()
+    signed    = base.filter_by(collection_status='Have Signed').count()
+    dont      = base.filter_by(collection_status="Don't Have").count()
+    no_auto   = base.filter_by(collection_status='No Auto Available').count()
+    in_person = base.filter_by(collection_status='In Person').count()
+    return jsonify({'total': total, 'have': have, 'signed': signed,
+                    'dont_have': dont, 'no_auto': no_auto, 'in_person': in_person})
+
+
+@app.route('/api/affiliates')
+@login_required
+def get_affiliates():
+    affs = Affiliate.query.order_by(Affiliate.team_name).all()
+    return jsonify([a.to_dict() for a in affs])
+
+
+# ── Bootstrap: create tables + auto-seed affiliates on first request ──────────
 _db_ready = False
+
 
 @app.before_request
 def _init_db():
     global _db_ready
     if not _db_ready:
-        db.create_all()
+        db.create_all()   # creates all tables including new ones (Affiliate, MinorPlayer)
+
+        # Auto-seed affiliates from Wikipedia on first boot (fast — one HTTP request)
+        try:
+            if Affiliate.query.count() == 0:
+                from import_affiliates import scrape_affiliates
+                records = scrape_affiliates()
+                for aff in records:
+                    db.session.add(Affiliate(
+                        team_name  = aff['team_name'],
+                        level      = aff['level'],
+                        league     = aff.get('league'),
+                        location   = aff.get('location'),
+                        year_start = aff['year_start'],
+                        year_end   = aff.get('year_end'),
+                    ))
+                db.session.commit()
+                print(f'Auto-seeded {len(records)} affiliates from Wikipedia.')
+        except Exception as e:
+            print(f'WARNING: Affiliate auto-seed failed (non-fatal): {e}')
+
         _db_ready = True
 
 

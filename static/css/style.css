@@ -150,6 +150,34 @@ button, select, input { font: inherit; }
 }
 .btn-logout:hover { background: rgba(255,255,255,.25); }
 
+/* ── Tab navigation ─────────────────────────────────────────────────────── */
+.tab-nav {
+  background: var(--navy);
+  display: flex;
+  border-bottom: 2px solid rgba(255,255,255,.12);
+  position: sticky;
+  top: 0;
+  z-index: 99;
+}
+.tab-btn {
+  padding: .6rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,.65);
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.tab-btn:hover  { color: #fff; }
+.tab-btn.active { color: #fff; border-bottom-color: var(--red); }
+
+/* ── Tab panels ─────────────────────────────────────────────────────────── */
+.tab-panel[hidden] { display: none; }
+
 /* ── Stats bar ───────────────────────────────────────────────────────────── */
 .stats-bar {
   background: var(--navy);
@@ -419,6 +447,29 @@ th.sort-active .sort-icon { opacity: 1; }
   transform: translateX(-50%) translateY(0);
 }
 
+/* ── Level badge (minor league) ──────────────────────────────────────────── */
+.level-badge {
+  display: inline-block;
+  padding: .18rem .55rem;
+  border-radius: 4px;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #e8eaf6;
+  color: var(--navy);
+}
+.level-triple-a   { background: #dbeafe; color: #1e3a8a; }
+.level-double-a   { background: #dcfce7; color: #14532d; }
+.level-high-a     { background: #fef9c3; color: #713f12; }
+.level-single-a   { background: #ffe4e6; color: #9f1239; }
+.level-short-season-a { background: #f3e8ff; color: #581c87; }
+.level-rookie,
+.level-rookie--intl- { background: #fce7f3; color: #831843; }
+
+/* ── Minor league extra columns ──────────────────────────────────────────── */
+.col-affiliate { max-width: 140px; font-size: .82rem; }
+.col-level     { white-space: nowrap; }
+
 /* ── Mobile responsive ───────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .header-text h1 { font-size: 1rem; }
@@ -436,4 +487,7 @@ th.sort-active .sort-icon { opacity: 1; }
 
   /* Compact status dropdown on mobile */
   .status-select { font-size: .75rem; padding: .25rem .35rem; padding-right: 1.3rem; }
+
+  /* Minor league: hide affiliate column on mobile */
+  .col-affiliate { display: none; }
 }
