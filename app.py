@@ -137,7 +137,7 @@ def get_affiliates():
     return jsonify([a.to_dict() for a in affs])
 
 
-# ── Bootstrap: create tables + auto-seed affiliates on first request ──────────
+# ── Bootstrap: create any missing tables on first request ─────────────────────
 _db_ready = False
 
 
@@ -145,27 +145,7 @@ _db_ready = False
 def _init_db():
     global _db_ready
     if not _db_ready:
-        db.create_all()   # creates all tables including new ones (Affiliate, MinorPlayer)
-
-        # Auto-seed affiliates from Wikipedia on first boot (fast — one HTTP request)
-        try:
-            if Affiliate.query.count() == 0:
-                from import_affiliates import scrape_affiliates
-                records = scrape_affiliates()
-                for aff in records:
-                    db.session.add(Affiliate(
-                        team_name  = aff['team_name'],
-                        level      = aff['level'],
-                        league     = aff.get('league'),
-                        location   = aff.get('location'),
-                        year_start = aff['year_start'],
-                        year_end   = aff.get('year_end'),
-                    ))
-                db.session.commit()
-                print(f'Auto-seeded {len(records)} affiliates from Wikipedia.')
-        except Exception as e:
-            print(f'WARNING: Affiliate auto-seed failed (non-fatal): {e}')
-
+        db.create_all()   # creates any missing tables (Affiliate, MinorPlayer)
         _db_ready = True
 
 
