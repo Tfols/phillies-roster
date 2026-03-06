@@ -59,6 +59,17 @@ def index():
 
 
 # ── MLB API ───────────────────────────────────────────────────────────────────
+@app.route('/api/debug')
+def debug_info():
+    """Temporary diagnostic route — remove after debugging."""
+    import traceback
+    try:
+        count = Player.query.count()
+        return jsonify({'status': 'ok', 'player_count': count, 'db_url_prefix': _db_url[:30]})
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e), 'trace': traceback.format_exc()}), 500
+
+
 @app.route('/api/players')
 @login_required
 def get_players():
