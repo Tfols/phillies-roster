@@ -485,4 +485,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupMinorFilters();
   setupMinorSort();
   registerSW();
+
+  // iOS PWA: prevent background pan/drag when touching dead space on the body.
+  // Scrollable containers (.table-wrapper etc.) are unaffected because their
+  // touch events don't bubble up with target === document.body.
+  document.body.addEventListener('touchmove', e => {
+    if (e.target === document.body) e.preventDefault();
+  }, { passive: false });
 });

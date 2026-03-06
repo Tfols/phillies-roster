@@ -32,9 +32,14 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 img { display: block; }
 button, select, input { font: inherit; }
+/* iOS: prevent auto-zoom on input focus — all controls must be ≥ 16px */
+input, select, textarea { font-size: 1rem; }
 
 /* ── Login page ─────────────────────────────────────────────────────────── */
 .login-page {
@@ -212,7 +217,7 @@ button, select, input { font: inherit; }
   padding: .5rem .75rem;
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  font-size: .88rem;
+  font-size: 1rem;
   outline: none;
   background: var(--bg);
   transition: border-color .2s;
@@ -229,7 +234,7 @@ button, select, input { font: inherit; }
   padding: .5rem .75rem;
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  font-size: .88rem;
+  font-size: 1rem;
   background: var(--bg);
   color: var(--text);
   cursor: pointer;
@@ -384,7 +389,7 @@ th.sort-active .sort-icon { opacity: 1; }
   padding: .3rem .6rem;
   border-radius: 6px;
   border: 1.5px solid transparent;
-  font-size: .82rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   outline: none;
@@ -485,8 +490,8 @@ th.sort-active .sort-icon { opacity: 1; }
   .roster-table th { padding: .5rem .5rem; font-size: .72rem; }
   .roster-table td { padding: .5rem .5rem; }
 
-  /* Compact status dropdown on mobile */
-  .status-select { font-size: .75rem; padding: .25rem .35rem; padding-right: 1.3rem; }
+  /* Status dropdown on mobile — keep 1rem to prevent iOS zoom */
+  .status-select { font-size: 1rem; padding: .25rem .35rem; padding-right: 1.3rem; }
 
   /* Minor league: hide affiliate column on mobile */
   .col-affiliate { display: none; }

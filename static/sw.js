@@ -1,4 +1,4 @@
-const CACHE = 'phillies-v9';
+const CACHE = 'phillies-v10';
 const APP_SHELL = [
   '/',
   '/static/css/style.css',
