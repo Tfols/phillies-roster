@@ -59,17 +59,6 @@ def index():
 
 
 # ── MLB API ───────────────────────────────────────────────────────────────────
-@app.route('/api/debug')
-def debug_info():
-    """Temporary diagnostic route — remove after debugging."""
-    import traceback
-    try:
-        count = Player.query.count()
-        return jsonify({'status': 'ok', 'player_count': count, 'db_url_prefix': _db_url[:30]})
-    except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e), 'trace': traceback.format_exc()}), 500
-
-
 @app.route('/api/players')
 @login_required
 def get_players():
@@ -157,6 +146,20 @@ def _init_db():
     global _db_ready
     if not _db_ready:
         db.create_all()   # creates any missing tables (Affiliate, MinorPlayer)
+        # Migrate players table: add birth_date column if it was missing from
+        # the original schema (added in the minor-league feature update).
+        try:
+            with db.engine.connect() as conn:
+                missing = conn.execute(db.text(
+                    "SELECT 1 FROM information_schema.columns "
+                    "WHERE table_name='players' AND column_name='birth_date'"
+                )).fetchone() is None
+                if missing:
+                    conn.execute(db.text('ALTER TABLE players ADD COLUMN birth_date DATE'))
+                    conn.commit()
+                    print('Schema migration: added birth_date column to players.')
+        except Exception as e:
+            print(f'WARNING: birth_date migration failed (non-fatal): {e}')
         _db_ready = True
 
 
