@@ -80,6 +80,8 @@ def main():
                         help='Re-import even if minor_players table already has data')
     parser.add_argument('--dedup-only', action='store_true',
                         help='Skip import, run dedup only')
+    parser.add_argument('--reset',      action='store_true',
+                        help='Wipe minor_players and bad affiliates, then re-import')
     args = parser.parse_args()
 
     start = args.year or args.start_year or START_YEAR
@@ -115,9 +117,25 @@ def main():
             run_dedup()
             return
 
+        # ── Reset: wipe bad data before re-import ────────────────────────────
+        if args.reset:
+            print('Resetting minor_players table...')
+            MinorPlayer.query.delete()
+            # Remove affiliates added by the bad import (no location = not from Wikipedia)
+            bad_affs = Affiliate.query.filter(
+                Affiliate.location.is_(None),
+                Affiliate.mlb_team_id.isnot(None),
+            ).count()
+            Affiliate.query.filter(
+                Affiliate.location.is_(None),
+                Affiliate.mlb_team_id.isnot(None),
+            ).delete()
+            db.session.commit()
+            print(f'  Cleared minor_players and {bad_affs} non-Wikipedia affiliates.')
+
         # ── Step 2: Player import ────────────────────────────────────────────
         existing = MinorPlayer.query.count()
-        if existing > 0 and not args.force:
+        if existing > 0 and not args.reset and not args.force:
             print(f'\nMinor players table already has {existing} records.')
             print('Skipping import. Use --force to re-run, or --dedup-only to re-dedup.')
         else:

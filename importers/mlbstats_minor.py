@@ -86,16 +86,17 @@ def import_minors(app, db, Affiliate, MinorPlayer, Player,
     with app.app_context():
         for year in range(start_year, end_year + 1):
             print(f'\n── {year} ──')
-            data = _get(f'{MLB_API}/teams?sportIds={SPORT_IDS}'
-                        f'&parentOrgIds={PHILLIES_ORG}&season={year}')
-            teams = data.get('teams', [])
+            data = _get(f'{MLB_API}/teams?sportIds={SPORT_IDS}&season={year}')
+            all_teams = data.get('teams', [])
+            # Filter client-side: parentOrgIds query param is ignored by the API
+            teams = [t for t in all_teams if t.get('parentOrgId') == PHILLIES_ORG]
             time.sleep(DELAY)
 
             if not teams:
-                print(f'  No affiliates found')
+                print(f'  No Phillies affiliates found')
                 continue
 
-            print(f'  {len(teams)} affiliate(s)')
+            print(f'  {len(teams)} Phillies affiliate(s)')
 
             for team in teams:
                 mlb_team_id = team['id']
