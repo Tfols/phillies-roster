@@ -224,7 +224,7 @@ input, select, textarea { font-size: 1rem; }
 }
 .filter-bar input:focus,
 .filter-bar select:focus { border-color: var(--red); }
-#searchInput  { flex: 1 1 160px; min-width: 140px; }
+#searchInput  { flex: 1 1 160px; min-width: 140px; font-size: 1rem; } /* iOS: force ≥16px to prevent zoom */
 #posFilter    { flex: 0 1 110px; }
 #yearInput    { flex: 0 1 90px; }
 /* ── Status multi-select dropdown ──────────────────────────────────────────── */
