@@ -72,17 +72,19 @@ function wireDropdown(btn, menu, onChange) {
 
 // Universal status-change handler (works for both MLB and minor league rows)
 async function onStatusChange(e) {
-  const sel       = e.target;
-  const id        = sel.dataset.id;
-  const api       = sel.dataset.api;           // 'players' or 'minors'
-  const status    = sel.value;
-  const prevClass = [...sel.classList].find(c => c.startsWith('status-'));
+  const sel        = e.target;
+  const id         = sel.dataset.id;
+  const api        = sel.dataset.api;           // 'players' or 'minors'
+  const status     = sel.value;
+  const prevClass  = [...sel.classList].find(c => c.startsWith('status-'));
+
+  const arr        = api === 'minors' ? allMinors : allPlayers;
+  const player     = arr.find(p => p.id == id);
+  const prevStatus = player?.collection_status;  // save value before mutating
 
   sel.classList.remove(prevClass);
   sel.classList.add(STATUS_CLASS[status]);
 
-  const arr     = api === 'minors' ? allMinors : allPlayers;
-  const player  = arr.find(p => p.id == id);
   if (player) player.collection_status = status;
 
   if (api === 'minors') updateMinorStats(); else updateGlobalStats();
@@ -96,7 +98,7 @@ async function onStatusChange(e) {
     if (!res.ok) throw new Error('Save failed');
     showToast(`${player?.full_name ?? 'Player'} → ${status}`);
   } catch {
-    if (player) player.collection_status = prevClass;
+    if (player) player.collection_status = prevStatus;  // restore status value, not CSS class
     showToast('Error saving — please retry', true);
     sel.classList.remove(STATUS_CLASS[status]);
     sel.classList.add(prevClass);
@@ -160,7 +162,7 @@ function getFiltered() {
   let list = allPlayers.filter(p => {
     if (search && !p.full_name.toLowerCase().includes(search)) return false;
     if (pos    && p.position !== pos) return false;
-    if (year   && !(p.year_start <= year && p.year_end >= year)) return false;
+    if (year   && !(p.year_start <= year && (p.year_end ?? 9999) >= year)) return false;
     if (statuses.size > 0 && !statuses.has(p.collection_status)) return false;
     return true;
   });
@@ -288,15 +290,10 @@ const minorStatInPerson = document.getElementById('minorStatInPerson');
 async function loadMinors() {
   minorTbody.innerHTML = `<tr class="loading-row"><td colspan="7"><span class="spinner"></span>Loading minor league roster…</td></tr>`;
   try {
-    const [playersRes, affsRes] = await Promise.all([
-      fetch('/api/minors'),
-      fetch('/api/affiliates'),
-    ]);
-    if (!playersRes.ok) throw new Error(playersRes.statusText);
-    allMinors      = await playersRes.json();
-    const affiliates = affsRes.ok ? await affsRes.json() : [];
-
-    populateMinorFilters(affiliates);
+    const res = await fetch('/api/minors');
+    if (!res.ok) throw new Error(res.statusText);
+    allMinors = await res.json();
+    populateMinorFilters();
     renderMinors();
     updateMinorStats();
     minorsLoaded = true;
@@ -305,7 +302,7 @@ async function loadMinors() {
   }
 }
 
-function populateMinorFilters(affiliates) {
+function populateMinorFilters() {
   // Positions from data
   const positions = [...new Set(allMinors.map(p => p.position).filter(Boolean))].sort();
   positions.forEach(pos => {
@@ -338,7 +335,7 @@ function getMinorFiltered() {
     if (pos   && p.position !== pos) return false;
     if (level && p.level !== level) return false;
     if (aff   && p.affiliate_name !== aff) return false;
-    if (year  && !(p.year_start <= year && p.year_end >= year)) return false;
+    if (year  && !(p.year_start <= year && (p.year_end ?? 9999) >= year)) return false;
     if (statuses.size > 0 && !statuses.has(p.collection_status)) return false;
     return true;
   });

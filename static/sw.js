@@ -1,4 +1,4 @@
-const CACHE = 'phillies-v11';
+const CACHE = 'phillies-v12';
 const APP_SHELL = [
   '/',
   '/static/css/style.css',
@@ -37,8 +37,11 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request)
         .then(resp => {
-          const clone = resp.clone();
-          caches.open(CACHE).then(c => c.put(event.request, clone));
+          // Only cache GET responses; PATCH/POST responses are not cacheable
+          if (event.request.method === 'GET') {
+            const clone = resp.clone();
+            caches.open(CACHE).then(c => c.put(event.request, clone));
+          }
           return resp;
         })
         .catch(() => caches.match(event.request))
