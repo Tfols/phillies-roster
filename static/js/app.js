@@ -25,6 +25,19 @@ function showToast(msg, error = false) {
   toast._timer = setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
+function mlbPlayerURL(p) {
+  if (!p.mlb_id) return null;
+  const slug = p.full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `https://www.mlb.com/player/${slug}-${p.mlb_id}`;
+}
+
+function playerNameHTML(p) {
+  const url = mlbPlayerURL(p);
+  return url
+    ? `<a class="player-link" href="${url}" target="_blank" rel="noopener">${esc(p.full_name)}</a>`
+    : esc(p.full_name);
+}
+
 function avatarHTML(p) {
   const initials = p.full_name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('');
   const img = p.photo_url
@@ -187,7 +200,7 @@ function render() {
   tbody.innerHTML = players.map(p => `
     <tr data-id="${p.id}">
       <td class="col-photo">${avatarHTML(p)}</td>
-      <td class="player-name">${esc(p.full_name)}</td>
+      <td class="player-name">${playerNameHTML(p)}</td>
       <td><span class="pos-badge">${esc(p.position || '—')}</span></td>
       <td>${esc(p.years_active || '—')}</td>
       <td>${statusSelectHTML(p, 'players')}</td>
@@ -371,7 +384,7 @@ function renderMinors() {
   minorTbody.innerHTML = players.map(p => `
     <tr data-id="${p.id}">
       <td class="col-photo">${avatarHTML(p)}</td>
-      <td class="player-name">${esc(p.full_name)}</td>
+      <td class="player-name">${playerNameHTML(p)}</td>
       <td><span class="pos-badge">${esc(p.position || '—')}</span></td>
       <td><span class="level-badge level-${esc(p.level.toLowerCase().replace(/[^a-z]/g,'-'))}">${esc(p.level || '—')}</span></td>
       <td class="col-affiliate">${esc(p.affiliate_name || '—')}</td>

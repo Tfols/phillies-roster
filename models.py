@@ -33,6 +33,7 @@ class Player(db.Model):
             'year_start':       self.year_start,
             'year_end':         self.year_end,
             'years_active':     self.years_active,
+            'mlb_id':           self.mlb_id,
             'photo_url':        self.photo_url,
             'collection_status': self.collection_status,
         }
