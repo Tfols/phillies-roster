@@ -57,7 +57,10 @@
     <button id="clearBtn" class="btn-clear">Clear</button>
   </div>
 
-  <div class="roster-count" id="rosterCount"></div>
+  <div class="roster-count-bar">
+    <div class="roster-count" id="rosterCount"></div>
+    <button id="mlbExportBtn" class="btn-export">Export PDF</button>
+  </div>
 
   <div class="table-wrapper">
     <table class="roster-table">
@@ -131,7 +134,10 @@
     <button id="minorClearBtn" class="btn-clear">Clear</button>
   </div>
 
-  <div class="roster-count" id="minorRosterCount"></div>
+  <div class="roster-count-bar">
+    <div class="roster-count" id="minorRosterCount"></div>
+    <button id="minorExportBtn" class="btn-export">Export PDF</button>
+  </div>
 
   <div class="table-wrapper">
     <table class="roster-table">
@@ -159,5 +165,6 @@
 <!-- ── Toast ──────────────────────────────────────────────────────────── -->
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="/static/js/app.js"></script>
 {% endblock %}

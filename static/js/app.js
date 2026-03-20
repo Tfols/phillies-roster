@@ -241,6 +241,9 @@ function setupMLBFilters() {
     document.querySelectorAll('#panel-mlb .stats-bar span[data-filter]').forEach(s => s.classList.remove('stat-active'));
     render();
   });
+  document.getElementById('mlbExportBtn').addEventListener('click', () => {
+    exportChecklistPDF(getFiltered(), 'mlb');
+  });
 }
 
 function setupMLBSort() {
@@ -429,6 +432,9 @@ function setupMinorFilters() {
     document.querySelectorAll('#panel-minors .stats-bar span[data-minor-filter]').forEach(s => s.classList.remove('stat-active'));
     renderMinors();
   });
+  document.getElementById('minorExportBtn').addEventListener('click', () => {
+    exportChecklistPDF(getMinorFiltered(), 'minors');
+  });
 }
 
 function setupMinorSort() {
@@ -463,6 +469,172 @@ function setupTabs() {
       }
     });
   });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  PDF EXPORT
+// ════════════════════════════════════════════════════════════════════════════
+
+function getMlbFilterDesc() {
+  const parts = [];
+  const search   = searchInput.value.trim();
+  const pos      = posFilter.value;
+  const year     = yearInput.value.trim();
+  const statuses = [...mlbDDMenu.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value);
+  if (search)          parts.push(`Name: "${search}"`);
+  if (pos)             parts.push(`Position: ${pos}`);
+  if (year)            parts.push(`Year: ${year}`);
+  if (statuses.length) parts.push(`Status: ${statuses.join(', ')}`);
+  return parts;
+}
+
+function getMinorFilterDesc() {
+  const parts = [];
+  const search   = minorSearchInput.value.trim();
+  const pos      = minorPosFilter.value;
+  const level    = minorLevelFilter.value;
+  const aff      = minorAffFilter.value;
+  const year     = minorYearInput.value.trim();
+  const statuses = [...minorDDMenu.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value);
+  if (search)          parts.push(`Name: "${search}"`);
+  if (pos)             parts.push(`Position: ${pos}`);
+  if (level)           parts.push(`Level: ${level}`);
+  if (aff)             parts.push(`Affiliate: ${aff}`);
+  if (year)            parts.push(`Year: ${year}`);
+  if (statuses.length) parts.push(`Status: ${statuses.join(', ')}`);
+  return parts;
+}
+
+function exportChecklistPDF(players, tab) {
+  if (!window.jspdf) { showToast('PDF library not loaded — check connection', true); return; }
+  if (players.length === 0) { showToast('No players to export', true); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc      = new jsPDF({ unit: 'mm', format: 'letter' });
+  const isMinor  = tab === 'minors';
+  const title    = isMinor
+    ? 'Philadelphia Phillies — Minor League Checklist'
+    : 'Philadelphia Phillies — MLB Roster Checklist';
+  const filters  = isMinor ? getMinorFilterDesc() : getMlbFilterDesc();
+  const subtitle = filters.length ? filters.join(' · ') : 'All Players';
+  const dateStr  = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  // Layout
+  const PW       = 215.9;
+  const ML = 14, MR = 14;
+  const COL_GAP  = 6;
+  const COL_W    = (PW - ML - MR - COL_GAP) / 2;   // ~90.95 mm
+  const COL_X    = [ML, ML + COL_W + COL_GAP];
+  const ROW_H    = 6.5;
+  const CHKBOX   = 3;
+  const BODY_END = 270;
+
+  let pageNum = 1;
+
+  function drawPageHeader(isFirst) {
+    let hy = 12;
+    if (isFirst) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(0, 45, 114);
+      doc.text(title, ML, hy);
+      hy += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(90, 90, 90);
+      doc.text(subtitle, ML, hy);
+      hy += 5;
+      doc.setFontSize(7.5);
+      doc.setTextColor(160, 160, 160);
+      doc.text(`${players.length} players · Generated ${dateStr} · phillies.tashefamily.com`, ML, hy);
+      hy += 4;
+    } else {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(0, 45, 114);
+      doc.text(title, ML, hy);
+      hy += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(140, 140, 140);
+      doc.text(subtitle, ML, hy);
+      hy += 3;
+    }
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.line(ML, hy, PW - MR, hy);
+    hy += 4;
+    return hy;
+  }
+
+  function drawPageFooter() {
+    doc.setFontSize(7);
+    doc.setTextColor(190, 190, 190);
+    doc.text(`Page ${pageNum}`, PW / 2, 276, { align: 'center' });
+  }
+
+  let bodyStartY = drawPageHeader(true);
+  let col = 0;
+  let y   = bodyStartY;
+
+  for (const p of players) {
+    if (y + ROW_H > BODY_END) {
+      if (col === 0) {
+        col = 1;
+        y   = bodyStartY;
+      } else {
+        drawPageFooter();
+        pageNum++;
+        doc.addPage();
+        bodyStartY = drawPageHeader(false);
+        col = 0;
+        y   = bodyStartY;
+      }
+    }
+
+    const x        = COL_X[col];
+    const colRight = x + COL_W;
+
+    // Checkbox square
+    doc.setDrawColor(100, 100, 100);
+    doc.setLineWidth(0.35);
+    doc.rect(x, y - CHKBOX + 0.8, CHKBOX, CHKBOX);
+
+    // Meta (right-aligned): pos · [level ·] years
+    const pos   = p.position    || '—';
+    const years = p.years_active || '—';
+    let meta;
+    if (isMinor) {
+      const lvl = (p.level || '—')
+        .replace('Triple-A', 'AAA').replace('Double-A', 'AA')
+        .replace('High-A', 'Hi-A').replace('Single-A', 'A');
+      meta = `${pos} · ${lvl} · ${years}`;
+    } else {
+      meta = `${pos} · ${years}`;
+    }
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(130, 130, 130);
+    const metaW = doc.getTextWidth(meta);
+    doc.text(meta, colRight, y, { align: 'right' });
+
+    // Name (truncated to avoid overlapping meta)
+    const nameX    = x + CHKBOX + 1.8;
+    const maxNameW = COL_W - CHKBOX - 1.8 - metaW - 3;
+    const name     = doc.splitTextToSize(p.full_name, maxNameW)[0];
+    doc.setFontSize(8.5);
+    doc.setTextColor(20, 20, 20);
+    doc.text(name, nameX, y);
+
+    y += ROW_H;
+  }
+
+  drawPageFooter();
+
+  const slug = filters.length
+    ? filters.map(f => f.replace(/[^a-z0-9]+/gi, '-')).join('-').toLowerCase().slice(0, 40)
+    : 'all';
+  doc.save(`phillies-${isMinor ? 'minors' : 'mlb'}-${slug}.pdf`);
 }
 
 // ── Service Worker ──────────────────────────────────────────────────────────
