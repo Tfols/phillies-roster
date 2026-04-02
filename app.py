@@ -4,7 +4,7 @@ from functools import wraps
 
 from flask import (Flask, jsonify, redirect, render_template,
                    request, session, url_for)
-from models import Player, Affiliate, MinorPlayer, db, VALID_STATUSES
+from models import Player, MinorPlayer, db, VALID_STATUSES
 
 app = Flask(__name__)
 
@@ -21,6 +21,31 @@ app.permanent_session_lifetime = timedelta(days=30)
 APP_PASSWORD = os.environ.get('APP_PASSWORD', '')
 
 db.init_app(app)
+
+
+def asset_url(filename):
+    static_path = os.path.join(app.static_folder, filename)
+    try:
+        version = int(os.path.getmtime(static_path))
+    except OSError:
+        version = 0
+    return url_for('static', filename=filename, v=version)
+
+
+@app.context_processor
+def inject_asset_url():
+    return {'asset_url': asset_url}
+
+
+@app.after_request
+def set_cache_headers(response):
+    if request.endpoint == 'static':
+        filename = (request.view_args or {}).get('filename', '')
+        if filename.endswith(('.css', '.js', '.json')):
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+    return response
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -79,19 +104,6 @@ def update_status(player_id):
     return jsonify(player.to_dict())
 
 
-@app.route('/api/stats')
-@login_required
-def get_stats():
-    total     = Player.query.count()
-    have      = Player.query.filter_by(collection_status='Have').count()
-    signed    = Player.query.filter_by(collection_status='Have Signed').count()
-    dont      = Player.query.filter_by(collection_status="Don't Have").count()
-    no_auto   = Player.query.filter_by(collection_status='No Auto Available').count()
-    in_person = Player.query.filter_by(collection_status='In Person').count()
-    return jsonify({'total': total, 'have': have, 'signed': signed,
-                    'dont_have': dont, 'no_auto': no_auto, 'in_person': in_person})
-
-
 # ── Minor League API ──────────────────────────────────────────────────────────
 @app.route('/api/minors')
 @login_required
@@ -114,27 +126,6 @@ def update_minor_status(player_id):
     player.collection_status = status
     db.session.commit()
     return jsonify(player.to_dict())
-
-
-@app.route('/api/minors/stats')
-@login_required
-def get_minor_stats():
-    base      = MinorPlayer.query.filter_by(is_mlb_duplicate=False)
-    total     = base.count()
-    have      = base.filter_by(collection_status='Have').count()
-    signed    = base.filter_by(collection_status='Have Signed').count()
-    dont      = base.filter_by(collection_status="Don't Have").count()
-    no_auto   = base.filter_by(collection_status='No Auto Available').count()
-    in_person = base.filter_by(collection_status='In Person').count()
-    return jsonify({'total': total, 'have': have, 'signed': signed,
-                    'dont_have': dont, 'no_auto': no_auto, 'in_person': in_person})
-
-
-@app.route('/api/affiliates')
-@login_required
-def get_affiliates():
-    affs = Affiliate.query.order_by(Affiliate.team_name).all()
-    return jsonify([a.to_dict() for a in affs])
 
 
 # ── Bootstrap: create any missing tables on first request ─────────────────────

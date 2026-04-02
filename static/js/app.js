@@ -9,6 +9,7 @@ const STATUS_CLASS = {
   'No Auto Available':'status-no-auto',
   'In Person':        'status-in-person',
 };
+const STATUS_VALUES = ["Don't Have", 'Have', 'Have Signed', 'No Auto Available', 'In Person'];
 
 function esc(str) {
   return String(str ?? '')
@@ -48,7 +49,7 @@ function avatarHTML(p) {
 
 function statusSelectHTML(p, apiPrefix) {
   const cls  = STATUS_CLASS[p.collection_status] || 'status-dont';
-  const opts = ["Don't Have", 'Have', 'Have Signed', 'No Auto Available', 'In Person']
+  const opts = STATUS_VALUES
     .map(s => `<option value="${s}"${s === p.collection_status ? ' selected' : ''}>${s}</option>`)
     .join('');
   return `<select class="status-select ${cls}" data-id="${p.id}" data-api="${apiPrefix}">${opts}</select>`;
@@ -112,9 +113,17 @@ async function onStatusChange(e) {
     showToast(`${player?.full_name ?? 'Player'} → ${status}`);
   } catch {
     if (player) player.collection_status = prevStatus;  // restore status value, not CSS class
+    sel.value = prevStatus || "Don't Have";
     showToast('Error saving — please retry', true);
     sel.classList.remove(STATUS_CLASS[status]);
     sel.classList.add(prevClass);
+    if (api === 'minors') {
+      updateMinorStats();
+      renderMinors();
+    } else {
+      updateGlobalStats();
+      render();
+    }
   }
 }
 
@@ -157,6 +166,7 @@ async function loadPlayers() {
 }
 
 function populatePositionFilter(select, players) {
+  select.length = 1;
   const positions = [...new Set(players.map(p => p.position).filter(Boolean))].sort();
   positions.forEach(pos => {
     const opt = document.createElement('option');
@@ -206,7 +216,6 @@ function render() {
       <td>${statusSelectHTML(p, 'players')}</td>
     </tr>
   `).join('');
-  tbody.querySelectorAll('.status-select').forEach(sel => sel.addEventListener('change', onStatusChange));
 }
 
 function updateGlobalStats() {
@@ -319,6 +328,9 @@ async function loadMinors() {
 }
 
 function populateMinorFilters() {
+  minorPosFilter.length = 1;
+  minorAffFilter.length = 1;
+
   // Positions from data
   const positions = [...new Set(allMinors.map(p => p.position).filter(Boolean))].sort();
   positions.forEach(pos => {
@@ -386,13 +398,12 @@ function renderMinors() {
       <td class="col-photo">${avatarHTML(p)}</td>
       <td class="player-name">${playerNameHTML(p)}</td>
       <td><span class="pos-badge">${esc(p.position || '—')}</span></td>
-      <td><span class="level-badge level-${esc(p.level.toLowerCase().replace(/[^a-z]/g,'-'))}">${esc(p.level || '—')}</span></td>
+      <td><span class="level-badge level-${esc((p.level || '').toLowerCase().replace(/[^a-z]/g,'-'))}">${esc(p.level || '—')}</span></td>
       <td class="col-affiliate">${esc(p.affiliate_name || '—')}</td>
       <td>${esc(p.years_active || '—')}</td>
       <td>${statusSelectHTML(p, 'minors')}</td>
     </tr>
   `).join('');
-  minorTbody.querySelectorAll('.status-select').forEach(sel => sel.addEventListener('change', onStatusChange));
 }
 
 function updateMinorStats() {
@@ -650,11 +661,12 @@ function exportChecklistPDF(players, tab) {
   doc.save(`phillies-${isMinor ? 'minors' : 'mlb'}-${slug}.pdf`);
 }
 
-// ── Service Worker ──────────────────────────────────────────────────────────
-function registerSW() {
+// ── Service Worker cleanup ──────────────────────────────────────────────────
+function cleanupServiceWorkers() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/sw.js')
-      .catch(err => console.warn('SW registration failed:', err));
+    navigator.serviceWorker.getRegistrations()
+      .then(registrations => registrations.forEach(registration => registration.unregister()))
+      .catch(err => console.warn('SW cleanup failed:', err));
   }
 }
 
@@ -666,7 +678,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupTabs();
   setupMinorFilters();
   setupMinorSort();
-  registerSW();
+  cleanupServiceWorkers();
+
+  tbody.addEventListener('change', e => {
+    if (e.target.matches('.status-select')) onStatusChange(e);
+  });
+  minorTbody.addEventListener('change', e => {
+    if (e.target.matches('.status-select')) onStatusChange(e);
+  });
 
   // iOS PWA: prevent background pan/drag when touching dead space on the body.
   // Scrollable containers (.table-wrapper etc.) are unaffected because their
