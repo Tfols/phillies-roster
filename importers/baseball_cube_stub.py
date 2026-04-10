@@ -45,8 +45,6 @@ Pass the path to the Baseball Cube export file/directory via data_path kwarg:
                                    data_path='/path/to/export.csv')
 """
 
-import csv
-import os
 from datetime import date
 
 

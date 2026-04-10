@@ -93,7 +93,7 @@ def main():
             p = c.execute(db.text('SELECT COUNT(*) FROM players')).scalar()
             a = c.execute(db.text('SELECT COUNT(*) FROM affiliates')).scalar()
             m = c.execute(db.text('SELECT COUNT(*) FROM minor_players')).scalar()
-        print(f'\nCurrent row counts:')
+        print('\nCurrent row counts:')
         print(f'  players      : {p:,}')
         print(f'  affiliates   : {a:,}')
         print(f'  minor_players: {m:,}')

@@ -93,7 +93,7 @@ def import_minors(app, db, Affiliate, MinorPlayer, Player,
             time.sleep(DELAY)
 
             if not teams:
-                print(f'  No Phillies affiliates found')
+                print('  No Phillies affiliates found')
                 continue
 
             print(f'  {len(teams)} Phillies affiliate(s)')
