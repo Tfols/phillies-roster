@@ -74,6 +74,11 @@ function clearDropdown(menu, btn) {
   makeDropdownLabel(menu, btn);
 }
 
+function wireSearchClear(input, btn, onClear) {
+  input.addEventListener('input', () => { btn.hidden = input.value === ''; });
+  btn.addEventListener('click', () => { input.value = ''; btn.hidden = true; onClear(); });
+}
+
 function wireDropdown(btn, menu, onChange) {
   btn.innerHTML = '<span class="dd-label">All Statuses</span> <span class="dd-arrow">▾</span>';
   btn.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
@@ -119,10 +124,10 @@ async function onStatusChange(e) {
     sel.classList.add(prevClass);
     if (api === 'minors') {
       updateMinorStats();
-      renderMinors();
+      if (panelUnified.hidden) renderMinors(); else renderUnified();
     } else {
       updateGlobalStats();
-      render();
+      if (panelUnified.hidden) render(); else renderUnified();
     }
   }
 }
@@ -134,15 +139,18 @@ async function onStatusChange(e) {
 let allPlayers = [];
 let sortCol    = 'full_name';
 let sortAsc    = true;
+let activeTab  = 'mlb';
 
-const tbody       = document.getElementById('playerBody');
-const searchInput = document.getElementById('searchInput');
-const posFilter   = document.getElementById('posFilter');
-const yearInput   = document.getElementById('yearInput');
-const mlbDDBtn    = document.getElementById('statusDropdownBtn');
-const mlbDDMenu   = document.getElementById('statusDropdownMenu');
-const clearBtn    = document.getElementById('clearBtn');
-const rosterCount = document.getElementById('rosterCount');
+const tbody          = document.getElementById('playerBody');
+const searchInput    = document.getElementById('searchInput');
+const mlbSearchClear = document.getElementById('mlbSearchClear');
+const posFilter      = document.getElementById('posFilter');
+const yearFromInput  = document.getElementById('yearFrom');
+const yearToInput    = document.getElementById('yearTo');
+const mlbDDBtn       = document.getElementById('statusDropdownBtn');
+const mlbDDMenu      = document.getElementById('statusDropdownMenu');
+const clearBtn       = document.getElementById('clearBtn');
+const rosterCount    = document.getElementById('rosterCount');
 
 const statTotal    = document.getElementById('statTotal');
 const statHave     = document.getElementById('statHave');
@@ -178,14 +186,19 @@ function populatePositionFilter(select, players) {
 function getFiltered() {
   const search   = searchInput.value.trim().toLowerCase();
   const pos      = posFilter.value;
-  const year     = parseInt(yearInput.value, 10) || null;
+  const yearFrom = parseInt(yearFromInput.value, 10) || null;
+  const yearTo   = parseInt(yearToInput.value, 10)   || null;
   const statuses = new Set(
     [...mlbDDMenu.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value)
   );
   let list = allPlayers.filter(p => {
     if (search && !p.full_name.toLowerCase().includes(search)) return false;
     if (pos    && p.position !== pos) return false;
-    if (year   && !(p.year_start <= year && (p.year_end ?? 9999) >= year)) return false;
+    if (yearFrom || yearTo) {
+      const end = p.year_end ?? 9999;
+      if (yearFrom && end < yearFrom) return false;
+      if (yearTo   && p.year_start > yearTo) return false;
+    }
     if (statuses.size > 0 && !statuses.has(p.collection_status)) return false;
     return true;
   });
@@ -251,14 +264,17 @@ function setupMLBFilters() {
     render();
   });
   searchInput.addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 200); });
+  wireSearchClear(searchInput, mlbSearchClear, render);
   posFilter.addEventListener('change', render);
-  yearInput.addEventListener('input',  () => { clearTimeout(t); t = setTimeout(render, 300); });
+  yearFromInput.addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 300); });
+  yearToInput.addEventListener('input',   () => { clearTimeout(t); t = setTimeout(render, 300); });
   document.querySelector('#panel-mlb .stats-bar').addEventListener('click', e => {
     const span = e.target.closest('[data-filter]');
     if (span) applyStatFilter(span.dataset.filter);
   });
   clearBtn.addEventListener('click', () => {
-    searchInput.value = ''; posFilter.value = ''; yearInput.value = '';
+    searchInput.value = ''; mlbSearchClear.hidden = true;
+    posFilter.value = ''; yearFromInput.value = ''; yearToInput.value = '';
     clearDropdown(mlbDDMenu, mlbDDBtn);
     document.querySelectorAll('#panel-mlb .stats-bar span[data-filter]').forEach(s => s.classList.remove('stat-active'));
     render();
@@ -294,16 +310,18 @@ let minorSortCol   = 'full_name';
 let minorSortAsc   = true;
 let minorsLoaded   = false;
 
-const minorTbody         = document.getElementById('minorBody');
-const minorSearchInput   = document.getElementById('minorSearchInput');
-const minorPosFilter     = document.getElementById('minorPosFilter');
-const minorLevelFilter   = document.getElementById('minorLevelFilter');
-const minorAffFilter     = document.getElementById('minorAffiliateFilter');
-const minorYearInput     = document.getElementById('minorYearInput');
-const minorDDBtn         = document.getElementById('minorStatusDropdownBtn');
-const minorDDMenu        = document.getElementById('minorStatusDropdownMenu');
-const minorClearBtn      = document.getElementById('minorClearBtn');
-const minorRosterCount   = document.getElementById('minorRosterCount');
+const minorTbody          = document.getElementById('minorBody');
+const minorSearchInput    = document.getElementById('minorSearchInput');
+const minorSearchClear    = document.getElementById('minorSearchClear');
+const minorPosFilter      = document.getElementById('minorPosFilter');
+const minorLevelFilter    = document.getElementById('minorLevelFilter');
+const minorAffFilter      = document.getElementById('minorAffiliateFilter');
+const minorYearFromInput  = document.getElementById('minorYearFrom');
+const minorYearToInput    = document.getElementById('minorYearTo');
+const minorDDBtn          = document.getElementById('minorStatusDropdownBtn');
+const minorDDMenu         = document.getElementById('minorStatusDropdownMenu');
+const minorClearBtn       = document.getElementById('minorClearBtn');
+const minorRosterCount    = document.getElementById('minorRosterCount');
 
 const minorStatTotal    = document.getElementById('minorStatTotal');
 const minorStatHave     = document.getElementById('minorStatHave');
@@ -311,6 +329,12 @@ const minorStatSigned   = document.getElementById('minorStatSigned');
 const minorStatDont     = document.getElementById('minorStatDont');
 const minorStatNoAuto   = document.getElementById('minorStatNoAuto');
 const minorStatInPerson = document.getElementById('minorStatInPerson');
+
+const globalSearch      = document.getElementById('globalSearch');
+const globalSearchClear = document.getElementById('globalSearchClear');
+const unifiedBody       = document.getElementById('unifiedBody');
+const unifiedCount      = document.getElementById('unifiedCount');
+const panelUnified      = document.getElementById('panel-unified');
 
 async function loadMinors() {
   minorTbody.innerHTML = `<tr class="loading-row"><td colspan="7"><span class="spinner"></span>Loading minor league roster…</td></tr>`;
@@ -322,6 +346,7 @@ async function loadMinors() {
     renderMinors();
     updateMinorStats();
     minorsLoaded = true;
+    if (!panelUnified.hidden) renderUnified();
   } catch {
     minorTbody.innerHTML = `<tr class="empty-row"><td colspan="7">Failed to load minor league data. Please refresh.</td></tr>`;
   }
@@ -353,7 +378,8 @@ function getMinorFiltered() {
   const pos      = minorPosFilter.value;
   const level    = minorLevelFilter.value;
   const aff      = minorAffFilter.value;
-  const year     = parseInt(minorYearInput.value, 10) || null;
+  const yearFrom = parseInt(minorYearFromInput.value, 10) || null;
+  const yearTo   = parseInt(minorYearToInput.value, 10)   || null;
   const statuses = new Set(
     [...minorDDMenu.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value)
   );
@@ -363,7 +389,11 @@ function getMinorFiltered() {
     if (pos   && p.position !== pos) return false;
     if (level && p.level !== level) return false;
     if (aff   && p.affiliate_name !== aff) return false;
-    if (year  && !(p.year_start <= year && (p.year_end ?? 9999) >= year)) return false;
+    if (yearFrom || yearTo) {
+      const end = p.year_end ?? 9999;
+      if (yearFrom && end < yearFrom) return false;
+      if (yearTo   && p.year_start > yearTo) return false;
+    }
     if (statuses.size > 0 && !statuses.has(p.collection_status)) return false;
     return true;
   });
@@ -439,10 +469,12 @@ function setupMinorFilters() {
     renderMinors();
   });
   minorSearchInput.addEventListener('input',  () => { clearTimeout(t); t = setTimeout(renderMinors, 200); });
+  wireSearchClear(minorSearchInput, minorSearchClear, renderMinors);
   minorPosFilter.addEventListener('change',   renderMinors);
   minorLevelFilter.addEventListener('change', renderMinors);
   minorAffFilter.addEventListener('change',   renderMinors);
-  minorYearInput.addEventListener('input',    () => { clearTimeout(t); t = setTimeout(renderMinors, 300); });
+  minorYearFromInput.addEventListener('input', () => { clearTimeout(t); t = setTimeout(renderMinors, 300); });
+  minorYearToInput.addEventListener('input',   () => { clearTimeout(t); t = setTimeout(renderMinors, 300); });
 
   document.querySelector('#panel-minors .stats-bar').addEventListener('click', e => {
     const span = e.target.closest('[data-minor-filter]');
@@ -450,8 +482,9 @@ function setupMinorFilters() {
   });
 
   minorClearBtn.addEventListener('click', () => {
-    minorSearchInput.value = ''; minorPosFilter.value = ''; minorLevelFilter.value = '';
-    minorAffFilter.value = ''; minorYearInput.value = '';
+    minorSearchInput.value = ''; minorSearchClear.hidden = true;
+    minorPosFilter.value = ''; minorLevelFilter.value = '';
+    minorAffFilter.value = ''; minorYearFromInput.value = ''; minorYearToInput.value = '';
     clearDropdown(minorDDMenu, minorDDBtn);
     document.querySelectorAll('#panel-minors .stats-bar span[data-minor-filter]').forEach(s => s.classList.remove('stat-active'));
     renderMinors();
@@ -486,11 +519,15 @@ function setupTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
+      if (!panelUnified.hidden) {
+        globalSearch.value = '';
+        globalSearchClear.hidden = true;
+        panelUnified.hidden = true;
+      }
+      activeTab = tab;
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
       document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.id !== `panel-${tab}`; });
-      if (tab === 'minors' && !minorsLoaded) {
-        loadMinors();
-      }
+      if (tab === 'minors' && !minorsLoaded) loadMinors();
     });
   });
 }
@@ -503,12 +540,15 @@ function getMlbFilterDesc() {
   const parts = [];
   const search   = searchInput.value.trim();
   const pos      = posFilter.value;
-  const year     = yearInput.value.trim();
+  const yearFrom = yearFromInput.value.trim();
+  const yearTo   = yearToInput.value.trim();
   const statuses = [...mlbDDMenu.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value);
-  if (search)          parts.push(`Name: "${search}"`);
-  if (pos)             parts.push(`Position: ${pos}`);
-  if (year)            parts.push(`Year: ${year}`);
-  if (statuses.length) parts.push(`Status: ${statuses.join(', ')}`);
+  if (search)                  parts.push(`Name: "${search}"`);
+  if (pos)                     parts.push(`Position: ${pos}`);
+  if (yearFrom && yearTo)      parts.push(`Years: ${yearFrom}–${yearTo}`);
+  else if (yearFrom)           parts.push(`From: ${yearFrom}`);
+  else if (yearTo)             parts.push(`To: ${yearTo}`);
+  if (statuses.length)         parts.push(`Status: ${statuses.join(', ')}`);
   return parts;
 }
 
@@ -518,14 +558,17 @@ function getMinorFilterDesc() {
   const pos      = minorPosFilter.value;
   const level    = minorLevelFilter.value;
   const aff      = minorAffFilter.value;
-  const year     = minorYearInput.value.trim();
+  const yearFrom = minorYearFromInput.value.trim();
+  const yearTo   = minorYearToInput.value.trim();
   const statuses = [...minorDDMenu.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value);
-  if (search)          parts.push(`Name: "${search}"`);
-  if (pos)             parts.push(`Position: ${pos}`);
-  if (level)           parts.push(`Level: ${level}`);
-  if (aff)             parts.push(`Affiliate: ${aff}`);
-  if (year)            parts.push(`Year: ${year}`);
-  if (statuses.length) parts.push(`Status: ${statuses.join(', ')}`);
+  if (search)                  parts.push(`Name: "${search}"`);
+  if (pos)                     parts.push(`Position: ${pos}`);
+  if (level)                   parts.push(`Level: ${level}`);
+  if (aff)                     parts.push(`Affiliate: ${aff}`);
+  if (yearFrom && yearTo)      parts.push(`Years: ${yearFrom}–${yearTo}`);
+  else if (yearFrom)           parts.push(`From: ${yearFrom}`);
+  else if (yearTo)             parts.push(`To: ${yearTo}`);
+  if (statuses.length)         parts.push(`Status: ${statuses.join(', ')}`);
   return parts;
 }
 
@@ -534,12 +577,13 @@ function exportChecklistPDF(players, tab) {
   if (players.length === 0) { showToast('No players to export', true); return; }
 
   const { jsPDF } = window.jspdf;
-  const doc      = new jsPDF({ unit: 'mm', format: 'letter' });
-  const isMinor  = tab === 'minors';
-  const title    = isMinor
-    ? 'Philadelphia Phillies — Minor League Checklist'
+  const doc       = new jsPDF({ unit: 'mm', format: 'letter' });
+  const isMinor   = tab === 'minors';
+  const isUnified = tab === 'unified';
+  const title     = isMinor   ? 'Philadelphia Phillies — Minor League Checklist'
+    : isUnified   ? 'Philadelphia Phillies — All Players Checklist'
     : 'Philadelphia Phillies — MLB Roster Checklist';
-  const filters  = isMinor ? getMinorFilterDesc() : getMlbFilterDesc();
+  const filters   = isMinor ? getMinorFilterDesc() : isUnified ? getUnifiedFilterDesc() : getMlbFilterDesc();
   const subtitle = filters.length ? filters.join(' · ') : 'All Players';
   const dateStr  = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
@@ -628,11 +672,13 @@ function exportChecklistPDF(players, tab) {
     const pos   = p.position    || '—';
     const years = p.years_active || '—';
     let meta;
-    if (isMinor) {
+    if (isMinor || (isUnified && p._tab === 'minors')) {
       const lvl = (p.level || '—')
         .replace('Triple-A', 'AAA').replace('Double-A', 'AA')
         .replace('High-A', 'Hi-A').replace('Single-A', 'A');
       meta = `${pos} · ${lvl} · ${years}`;
+    } else if (isUnified) {
+      meta = `${pos} · MLB · ${years}`;
     } else {
       meta = `${pos} · ${years}`;
     }
@@ -658,7 +704,84 @@ function exportChecklistPDF(players, tab) {
   const slug = filters.length
     ? filters.map(f => f.replace(/[^a-z0-9]+/gi, '-')).join('-').toLowerCase().slice(0, 40)
     : 'all';
-  doc.save(`phillies-${isMinor ? 'minors' : 'mlb'}-${slug}.pdf`);
+  doc.save(`phillies-${isMinor ? 'minors' : isUnified ? 'all' : 'mlb'}-${slug}.pdf`);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  UNIFIED SEARCH
+// ════════════════════════════════════════════════════════════════════════════
+
+function getUnifiedFilterDesc() {
+  const q = globalSearch.value.trim();
+  return q ? [`Search: "${q}"`] : [];
+}
+
+function getUnifiedFiltered() {
+  const q = globalSearch.value.trim().toLowerCase();
+  if (!q) return [];
+  const mlb   = allPlayers.filter(p => p.full_name.toLowerCase().includes(q))
+                           .map(p => ({ ...p, _tab: 'mlb' }));
+  const minor = allMinors.filter(p  => p.full_name.toLowerCase().includes(q))
+                          .map(p => ({ ...p, _tab: 'minors' }));
+  return [...mlb, ...minor].sort((a, b) => a.full_name.localeCompare(b.full_name));
+}
+
+function renderUnified() {
+  const players  = getUnifiedFiltered();
+  const mlbCnt   = players.filter(p => p._tab === 'mlb').length;
+  const minorCnt = players.filter(p => p._tab === 'minors').length;
+  const loading  = !minorsLoaded ? ' <em>(minor league loading…)</em>' : '';
+  unifiedCount.innerHTML = `<strong>${players.length.toLocaleString()}</strong> players — ${mlbCnt} MLB, ${minorCnt} minor league${loading}`;
+  if (players.length === 0) {
+    unifiedBody.innerHTML = `<tr class="empty-row"><td colspan="6">No players match your search.</td></tr>`;
+    return;
+  }
+  unifiedBody.innerHTML = players.map(p => {
+    const lvl    = p._tab === 'mlb' ? 'MLB' : (p.level || '—');
+    const lvlCls = p._tab === 'mlb' ? 'level-mlb'
+      : `level-${(p.level || '').toLowerCase().replace(/[^a-z]/g, '-')}`;
+    return `<tr data-id="${p.id}">
+      <td class="col-photo">${avatarHTML(p)}</td>
+      <td class="player-name">${playerNameHTML(p)}</td>
+      <td><span class="pos-badge">${esc(p.position || '—')}</span></td>
+      <td><span class="level-badge ${esc(lvlCls)}">${esc(lvl)}</span></td>
+      <td>${esc(p.years_active || '—')}</td>
+      <td>${statusSelectHTML(p, p._tab === 'mlb' ? 'players' : 'minors')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function enterUnifiedMode() {
+  document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = true; });
+  panelUnified.hidden = false;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  renderUnified();
+}
+
+function exitUnifiedMode() {
+  globalSearch.value = '';
+  globalSearchClear.hidden = true;
+  panelUnified.hidden = true;
+  document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.id !== `panel-${activeTab}`; });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab));
+}
+
+function setupUnifiedSearch() {
+  let t;
+  globalSearch.addEventListener('input', () => {
+    globalSearchClear.hidden = globalSearch.value === '';
+    clearTimeout(t);
+    if (globalSearch.value.trim()) {
+      if (!minorsLoaded) loadMinors();
+      t = setTimeout(enterUnifiedMode, 200);
+    } else {
+      exitUnifiedMode();
+    }
+  });
+  globalSearchClear.addEventListener('click', exitUnifiedMode);
+  document.getElementById('unifiedExportBtn').addEventListener('click', () => {
+    exportChecklistPDF(getUnifiedFiltered(), 'unified');
+  });
 }
 
 // ── Service Worker cleanup ──────────────────────────────────────────────────
@@ -678,12 +801,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupTabs();
   setupMinorFilters();
   setupMinorSort();
+  setupUnifiedSearch();
   cleanupServiceWorkers();
 
   tbody.addEventListener('change', e => {
     if (e.target.matches('.status-select')) onStatusChange(e);
   });
   minorTbody.addEventListener('change', e => {
+    if (e.target.matches('.status-select')) onStatusChange(e);
+  });
+  unifiedBody.addEventListener('change', e => {
     if (e.target.matches('.status-select')) onStatusChange(e);
   });
 

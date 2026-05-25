@@ -19,6 +19,15 @@
   <button class="tab-btn" data-tab="minors">🌱 Minor League</button>
 </nav>
 
+<!-- ── Global search ──────────────────────────────────────────────────── -->
+<div class="global-search-bar">
+  <div class="search-wrap">
+    <input type="search" id="globalSearch" placeholder="Search all players (MLB + Minor League)…"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="search-clear" id="globalSearchClear" hidden aria-label="Clear">×</button>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!--  MLB PANEL                                                            -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
@@ -36,12 +45,19 @@
 
   <!-- Filter bar -->
   <div class="filter-bar">
-    <input type="search" id="searchInput" placeholder="Search name…"
-      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="search-wrap">
+      <input type="search" id="searchInput" placeholder="Search name…"
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="search-clear" id="mlbSearchClear" hidden aria-label="Clear">×</button>
+    </div>
     <select id="posFilter">
       <option value="">All Positions</option>
     </select>
-    <input type="number" id="yearInput" placeholder="Year…" min="1883" max="2025">
+    <div class="year-range-wrap">
+      <input type="number" id="yearFrom" placeholder="From" min="1883" max="2025">
+      <span class="year-sep">–</span>
+      <input type="number" id="yearTo" placeholder="To" min="1883" max="2025">
+    </div>
     <div class="status-dropdown" id="statusDropdown">
       <button type="button" class="status-dropdown-btn" id="statusDropdownBtn">
         All Statuses <span class="dd-arrow">▾</span>
@@ -100,8 +116,11 @@
 
   <!-- Minor league filter bar -->
   <div class="filter-bar">
-    <input type="search" id="minorSearchInput" placeholder="Search name…"
-      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="search-wrap">
+      <input type="search" id="minorSearchInput" placeholder="Search name…"
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="search-clear" id="minorSearchClear" hidden aria-label="Clear">×</button>
+    </div>
     <select id="minorPosFilter">
       <option value="">All Positions</option>
     </select>
@@ -118,7 +137,11 @@
     <select id="minorAffiliateFilter">
       <option value="">All Affiliates</option>
     </select>
-    <input type="number" id="minorYearInput" placeholder="Year…" min="2005" max="2025">
+    <div class="year-range-wrap">
+      <input type="number" id="minorYearFrom" placeholder="From" min="2005" max="2025">
+      <span class="year-sep">–</span>
+      <input type="number" id="minorYearTo" placeholder="To" min="2005" max="2025">
+    </div>
     <div class="status-dropdown" id="minorStatusDropdown">
       <button type="button" class="status-dropdown-btn" id="minorStatusDropdownBtn">
         All Statuses <span class="dd-arrow">▾</span>
@@ -161,6 +184,31 @@
   </div>
 
 </div><!-- #panel-minors -->
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  UNIFIED SEARCH PANEL                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div id="panel-unified" class="tab-panel" hidden>
+  <div class="roster-count-bar">
+    <div class="roster-count" id="unifiedCount"></div>
+    <button id="unifiedExportBtn" class="btn-export">Export PDF</button>
+  </div>
+  <div class="table-wrapper">
+    <table class="roster-table">
+      <thead>
+        <tr>
+          <th class="col-photo"></th>
+          <th>Name</th>
+          <th>Pos</th>
+          <th>Level</th>
+          <th>Years</th>
+          <th>Collection</th>
+        </tr>
+      </thead>
+      <tbody id="unifiedBody"></tbody>
+    </table>
+  </div>
+</div><!-- #panel-unified -->
 
 <!-- ── Toast ──────────────────────────────────────────────────────────── -->
 <div class="toast" id="toast"></div>

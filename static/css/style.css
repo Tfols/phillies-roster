@@ -224,9 +224,64 @@ input, select, textarea { font-size: 1rem; }
 }
 .filter-bar input:focus,
 .filter-bar select:focus { border-color: var(--red); }
-#searchInput  { flex: 1 1 160px; min-width: 140px; font-size: 1rem; }
+.filter-bar .search-wrap { flex: 1 1 160px; min-width: 140px; }
+#searchInput, #minorSearchInput { font-size: 1rem; }
 #posFilter    { flex: 0 1 110px; }
-#yearInput    { flex: 0 1 90px; }
+
+/* ── Search wrap & clear (×) button ────────────────────────────────────────── */
+.search-wrap { position: relative; display: flex; align-items: center; }
+.search-wrap input { width: 100%; padding-right: 2rem; }
+.search-clear {
+  position: absolute;
+  right: .45rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, background .15s;
+}
+.search-clear:hover { color: var(--text); background: var(--border); }
+input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+/* ── Year range ──────────────────────────────────────────────────────────── */
+.year-range-wrap {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  flex: 0 1 168px;
+}
+.year-range-wrap input { flex: 1; min-width: 0; text-align: center; padding: .5rem .3rem; }
+.year-sep { color: var(--muted); font-size: .9rem; flex-shrink: 0; }
+
+/* ── Global search bar ───────────────────────────────────────────────────── */
+.global-search-bar {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: .55rem 1.25rem;
+}
+.global-search-bar .search-wrap { width: 100%; }
+#globalSearch {
+  padding: .58rem .9rem;
+  padding-right: 2.5rem;
+  border: 1.5px solid var(--border);
+  border-radius: 24px;
+  font-size: 1rem;
+  background: var(--bg);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+#globalSearch:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(0,45,114,.1); }
+.global-search-bar .search-clear { right: .65rem; }
+
 /* ── Status multi-select dropdown ──────────────────────────────────────────── */
 .status-dropdown { position: relative; flex: 0 1 150px; }
 .status-dropdown-btn {
@@ -498,6 +553,7 @@ th.sort-active .sort-icon { opacity: 1; }
 .level-short-season-a { background: #f3e8ff; color: #581c87; }
 .level-rookie,
 .level-rookie--intl- { background: #fce7f3; color: #831843; }
+.level-mlb { background: var(--navy); color: var(--white); }
 
 /* ── Minor league extra columns ──────────────────────────────────────────── */
 .col-affiliate { max-width: 140px; font-size: .82rem; }
@@ -507,7 +563,8 @@ th.sort-active .sort-icon { opacity: 1; }
 @media (max-width: 600px) {
   .header-text h1 { font-size: 1rem; }
   .filter-bar { padding: .6rem .75rem; gap: .5rem; }
-  #searchInput { flex: 1 1 100%; }
+  .filter-bar .search-wrap { flex: 1 1 100%; }
+  .year-range-wrap { flex: 1 1 140px; }
   .stats-bar { gap: 1rem; font-size: .78rem; }
 
   /* Hide photo column — saves ~50px, lets table fit 375px screens */
