@@ -43,7 +43,7 @@ Context is a limited resource. Use subagents (Agent tool) to keep exploration an
 
 ## Live App
 - **URL:** https://phillies.tashefamily.com
-- **Password:** `TashePhillies` (Railway env var `APP_PASSWORD`)
+- **Auth:** Google OAuth via Authlib. Allowed accounts in Railway env var `ALLOWED_EMAILS` (comma-separated, lowercase). Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` set in Railway. Redirect URI registered in Google Cloud Console: `https://phillies.tashefamily.com/auth/callback`.
 - **GitHub:** https://github.com/Tfols/phillies-roster (branch: `master`)
 - **Hosting:** Railway (free tier), DNS via Cloudflare
 

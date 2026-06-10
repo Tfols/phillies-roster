@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from functools import wraps
 
+from authlib.integrations.flask_client import OAuth
 from flask import (Flask, jsonify, redirect, render_template,
                    request, session, url_for)
 from models import Player, MinorPlayer, db, VALID_STATUSES
@@ -18,7 +19,22 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
 app.permanent_session_lifetime = timedelta(days=30)
 
-APP_PASSWORD = os.environ.get('APP_PASSWORD', '')
+# Comma-separated list of Google emails allowed to sign in
+ALLOWED_EMAILS = {
+    e.strip().lower()
+    for e in os.environ.get('ALLOWED_EMAILS', '').split(',')
+    if e.strip()
+}
+
+# OAuth setup — Google
+oauth = OAuth(app)
+oauth.register(
+    name='google',
+    client_id=os.environ.get('GOOGLE_CLIENT_ID', ''),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
 
 db.init_app(app)
 
@@ -52,22 +68,42 @@ def set_cache_headers(response):
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('logged_in'):
+        if not session.get('user_email'):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login')
 def login():
-    error = None
-    if request.method == 'POST':
-        if request.form.get('password') == APP_PASSWORD:
-            session.permanent = True
-            session['logged_in'] = True
-            return redirect(url_for('index'))
-        error = 'Incorrect password. Please try again.'
+    error = request.args.get('error')
     return render_template('login.html', error=error)
+
+
+@app.route('/auth/google')
+def auth_google():
+    redirect_uri = url_for('auth_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/callback')
+def auth_callback():
+    try:
+        token = oauth.google.authorize_access_token()
+    except Exception as e:
+        return redirect(url_for('login', error=f'Sign-in failed: {e}'))
+
+    userinfo = token.get('userinfo') or {}
+    email = (userinfo.get('email') or '').lower()
+
+    if not email or email not in ALLOWED_EMAILS:
+        return redirect(url_for('login',
+                                error='This Google account is not authorized.'))
+
+    session.permanent = True
+    session['user_email'] = email
+    session['user_name']  = userinfo.get('name', '')
+    return redirect(url_for('index'))
 
 
 @app.route('/logout')

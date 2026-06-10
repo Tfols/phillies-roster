@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Login – Phillies Roster{% endblock %}
+{% block title %}Sign In – Phillies Roster{% endblock %}
 
 {% block body %}
 <div class="login-page">
@@ -8,19 +8,7 @@
     <h1 class="login-title">Phillies Roster</h1>
     <p class="login-sub">Philadelphia Phillies · All-Time Players</p>
 
-    <form class="login-form" method="POST" action="/login">
-      <label for="password">Password</label>
-      <input
-        type="password"
-        id="password"
-        name="password"
-        placeholder="Enter password"
-        autocomplete="current-password"
-        autofocus
-        required
-      >
-      <button type="submit" class="btn-login">Sign In</button>
-    </form>
+    <a class="btn-login" href="{{ url_for('auth_google') }}">Sign In with Google</a>
 
     {% if error %}
       <div class="login-error">{{ error }}</div>
