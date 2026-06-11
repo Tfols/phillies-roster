@@ -5,9 +5,16 @@ from functools import wraps
 from authlib.integrations.flask_client import OAuth
 from flask import (Flask, jsonify, redirect, render_template,
                    request, session, url_for)
+from werkzeug.middleware.proxy_fix import ProxyFix
 from models import Player, MinorPlayer, db, VALID_STATUSES
 
 app = Flask(__name__)
+
+# Railway terminates TLS at its edge and forwards as plain HTTP — without
+# ProxyFix, url_for(_external=True) builds http:// URLs, which Google
+# rejects as a redirect_uri mismatch. ProxyFix reads X-Forwarded-Proto
+# from the Railway proxy so generated URLs are correctly https://.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 _db_url = os.environ.get('DATABASE_URL', 'postgresql://localhost/phillies')
