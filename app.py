@@ -27,11 +27,31 @@ ALLOWED_EMAILS = {
 }
 
 # OAuth setup — Google
+_google_client_id     = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+_google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
+
+# Visible in Railway "Deploy logs" — confirms whether the var is being read.
+print(
+    f'[auth] GOOGLE_CLIENT_ID present={bool(_google_client_id)} '
+    f'len={len(_google_client_id)} '
+    f'tail={_google_client_id[-12:] if _google_client_id else "<empty>"}',
+    flush=True,
+)
+print(
+    f'[auth] GOOGLE_CLIENT_SECRET present={bool(_google_client_secret)} '
+    f'len={len(_google_client_secret)}',
+    flush=True,
+)
+print(
+    f'[auth] ALLOWED_EMAILS count={len(ALLOWED_EMAILS)}',
+    flush=True,
+)
+
 oauth = OAuth(app)
 oauth.register(
     name='google',
-    client_id=os.environ.get('GOOGLE_CLIENT_ID', ''),
-    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+    client_id=_google_client_id,
+    client_secret=_google_client_secret,
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'},
 )
