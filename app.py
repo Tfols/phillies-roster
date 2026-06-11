@@ -103,7 +103,18 @@ def login():
 @app.route('/auth/google')
 def auth_google():
     redirect_uri = url_for('auth_callback', _external=True)
-    return oauth.google.authorize_redirect(redirect_uri)
+    print(f'[auth] /auth/google redirect_uri={redirect_uri}', flush=True)
+    # Inspect the configured client at request time
+    client = oauth.google
+    print(
+        f'[auth] client.client_id present={bool(getattr(client, "client_id", None))} '
+        f'tail={(getattr(client, "client_id", "") or "")[-12:]}',
+        flush=True,
+    )
+    resp = client.authorize_redirect(redirect_uri)
+    # resp is a flask redirect — Location header has the full Google URL
+    print(f'[auth] redirect Location={resp.headers.get("Location", "<none>")}', flush=True)
+    return resp
 
 
 @app.route('/auth/callback')
